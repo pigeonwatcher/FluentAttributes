@@ -13,6 +13,8 @@
 		<Description>An attribute library for .NET that uses a fluent interface for applying attributes to classes, structs, properties, etc. </Description>
 		<PackageTags>attributes;fluent;library;utility</PackageTags>
 		<RepositoryUrl>https://github.com/pigeonwatcher/FluentAttributes</RepositoryUrl>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>Fluent Attributes</Title>
 	</PropertyGroup>
 
 </Project>
