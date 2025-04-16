@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace PigeonWatcher.FluentAttributes.Builders;
@@ -14,9 +15,9 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// <summary>
     /// The symbol <see cref="Attribute"/>s.
     /// </summary>
-    protected List<Attribute>? Attributes { get; set; }
+    protected List<Attribute>? Attributes { get; private set; }
 
-    protected bool IncludePredefinedAttributesFlag;
+    protected bool IncludePredefinedAttributesFlag { get; private set; }
 
     /// <summary>
     /// Sets a flag to include predefined attributes in the attribute map. 
@@ -42,4 +43,40 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
         Attributes.Add(attribute);
         return (TMapBuilder)this;
     }
+
+    /// <summary>
+    /// Adds or retrieves an existing <see cref="Attribute"/> of <see cref="Type"/> <typeparamref name="TAttribute"/>,
+    /// and then applies the specified configuration action on it.
+    /// </summary>
+    /// <typeparam name="TAttribute">
+    /// The <see cref="Attribute"/> <see cref="Type"/>. Must inherit from <see cref="Attribute"/> and have a 
+    /// parameterless constructor.
+    /// </typeparam>
+    /// <param name="configure">=An <see cref="Action"/> to configure the <see cref="Attribute"/>.</param>
+    /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
+    /// <example>
+    /// This example demonstrates how to add an <c>ExampleAttribute</c> and configure its <c>Property</c> member:
+    /// <code>
+    /// builder.WithAttribute&lt;ExampleAttribute&gt;(attribute => 
+    /// {
+    ///     attribute.Property = "value";
+    /// });
+    /// </code>
+    /// </example>
+    public TMapBuilder WithAttribute<TAttribute>(Action<TAttribute> configure)
+        where TAttribute : Attribute, new()
+    {
+        Attributes ??= new List<Attribute>();
+        Attribute? attribute = Attributes.OfType<TAttribute>().FirstOrDefault();
+        if (attribute == null)
+        {
+            attribute = new TAttribute();
+            Attributes.Add(attribute);
+        }
+
+        configure((TAttribute)attribute);
+
+        return (TMapBuilder)this;
+    }
+
 }
