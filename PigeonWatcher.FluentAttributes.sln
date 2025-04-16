@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PigeonWatcher.FluentAttributes", "PigeonWatcher.FluentAttributes\PigeonWatcher.FluentAttributes.csproj", "{D0304475-F6AA-4CDA-AABA-D3660971DA8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PigeonWatcher.FluentAttributes.Tests", "PigeonWatcher.FluentAttributes.Tests\PigeonWatcher.FluentAttributes.Tests.csproj", "{014A3C7F-6FEA-4D39-A401-2024BAA67171}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D0304475-F6AA-4CDA-AABA-D3660971DA8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0304475-F6AA-4CDA-AABA-D3660971DA8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0304475-F6AA-4CDA-AABA-D3660971DA8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{014A3C7F-6FEA-4D39-A401-2024BAA67171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{014A3C7F-6FEA-4D39-A401-2024BAA67171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{014A3C7F-6FEA-4D39-A401-2024BAA67171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{014A3C7F-6FEA-4D39-A401-2024BAA67171}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
