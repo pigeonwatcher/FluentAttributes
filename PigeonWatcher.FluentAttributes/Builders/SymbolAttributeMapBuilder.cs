@@ -17,6 +17,9 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// </summary>
     public List<Attribute>? Attributes { get; private set; }
 
+    /// <summary>
+    /// A flag indicating whether to include predefined <see cref="Attribute"/>s in the symbol map.
+    /// </summary>
     public bool IncludePredefinedAttributesFlag { get; private set; }
 
     /// <summary>
