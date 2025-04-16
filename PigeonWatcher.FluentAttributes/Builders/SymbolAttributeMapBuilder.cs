@@ -20,7 +20,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     protected bool IncludePredefinedAttributesFlag { get; private set; }
 
     /// <summary>
-    /// Sets a flag to include predefined attributes in the attribute map. 
+    /// Sets a flag to include predefined <see cref="Attribute"/> in the attribute map. 
     /// </summary>
     /// <param name="includePredefinedAttributes">
     /// <see langword="true"/> to include predefined attributes; otherwise, <see langword="false"/>.
@@ -33,7 +33,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     }
 
     /// <summary>
-    /// Adds an attribute to the symbol map.
+    /// Adds an <see cref="Attribute"/> to the symbol map.
     /// </summary>
     /// <param name="attribute">The <see cref="Attribute"/> instance.</param>
     /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
