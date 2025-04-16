@@ -39,7 +39,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
     public TMapBuilder WithAttribute(Attribute attribute)
     {
-        Attributes ??= new();
+        Attributes ??= [];
         Attributes.Add(attribute);
         return (TMapBuilder)this;
     }
@@ -66,7 +66,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     public TMapBuilder WithAttribute<TAttribute>(Action<TAttribute> configure)
         where TAttribute : Attribute, new()
     {
-        Attributes ??= new List<Attribute>();
+        Attributes ??= [];
         Attribute? attribute = Attributes.OfType<TAttribute>().FirstOrDefault();
         if (attribute == null)
         {

@@ -13,7 +13,7 @@ namespace PigeonWatcher.FluentAttributes;
 /// </summary>
 public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
 {
-    private readonly Dictionary<Type, TypeAttributeMap> _typeAttributeMaps = new();
+    private readonly Dictionary<Type, TypeAttributeMap> _typeAttributeMaps = [];
 
     /// <summary>
     /// Adds a <see cref="TypeAttributeMap"/> to the model.

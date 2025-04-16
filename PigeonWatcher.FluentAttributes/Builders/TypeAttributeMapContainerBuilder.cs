@@ -16,7 +16,7 @@ public class TypeAttributeMapContainerBuilder
     /// <summary>
     /// The <see cref="TypeAttributeMapContainer"/> instance being built.
     /// </summary>
-    private TypeAttributeMapContainer Container => _container ??= new TypeAttributeMapContainer();
+    private TypeAttributeMapContainer Container => _container ??= [];
 
     /// <summary>
     /// Applies all <see cref="ITypeAttributeMapConfiguration{T}"/>'s from the specified assembly.
@@ -67,8 +67,7 @@ public class TypeAttributeMapContainerBuilder
                 throw new InvalidOperationException("No Build method found on the builder.");
             }
 
-            TypeAttributeMap? typeAttributeMap = buildMethod.Invoke(builderInstance, null) as TypeAttributeMap;
-            if (typeAttributeMap == null)
+            if (buildMethod.Invoke(builderInstance, null) is not TypeAttributeMap typeAttributeMap)
             {
                 continue;
             }
