@@ -65,7 +65,7 @@ public abstract class SymbolAttributeMap
             return true;
         }
 
-        attribute = default;
+        attribute = null;
         return false;
     }
 

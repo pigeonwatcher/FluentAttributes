@@ -21,7 +21,7 @@ public class TypeAttributeMap : SymbolAttributeMap
     /// <summary>
     /// The property maps for the properties belonging to the <see cref="Type"/>.
     /// </summary>
-    private Dictionary<string, PropertyAttributeMap> PropertyAttributeMaps => _propertyAttributeMaps ??= new();
+    private Dictionary<string, PropertyAttributeMap> PropertyAttributeMaps => _propertyAttributeMaps ??= [];
 
     /// <summary>
     /// Adds a <see cref="PropertyAttributeMap"/> for the specified <paramref name="propertyName"/>.
@@ -29,8 +29,8 @@ public class TypeAttributeMap : SymbolAttributeMap
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyAttributeMap">The <see cref="PropertyAttributeMap"/> instance.</param>
     /// <returns>
-    /// <see cref="true"/> if the <paramref name="propertyAttributeMap"/> was added successfully; otherwise,
-    /// <see cref="false"/>.
+    /// <see langword="true"/> if the <paramref name="propertyAttributeMap"/> was added successfully; otherwise,
+    /// <see langword="false"/>.
     /// </returns>
     public bool AddPropertyAttributeMap(string propertyName, PropertyAttributeMap propertyAttributeMap)
     {
@@ -43,7 +43,7 @@ public class TypeAttributeMap : SymbolAttributeMap
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyAttributeMap">The <see cref="PropertyAttributeMap"/> instance, or <see langword="null"/> if not found.</param>
     /// <returns>
-    /// <see cref="true"/> if the <paramref name="propertyAttributeMap"/> was found; otherwise, <see cref="false"/>.
+    /// <see langword="true"/> if the <paramref name="propertyAttributeMap"/> was found; otherwise, <see langword="false"/>.
     /// </returns>
     public bool TryGetPropertyAttributeMap(string propertyName, [NotNullWhen(true)] out PropertyAttributeMap? propertyAttributeMap)
     {

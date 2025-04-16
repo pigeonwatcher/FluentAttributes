@@ -22,7 +22,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// Sets a flag to include predefined attributes in the attribute map. 
     /// </summary>
     /// <param name="includePredefinedAttributes">
-    /// <see cref="true"/> to include predefined attributes; otherwise, <see cref="false"/>.
+    /// <see langword="true"/> to include predefined attributes; otherwise, <see langword="false"/>.
     /// </param>
     /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
     public TMapBuilder IncludePredefinedAttributes(bool includePredefinedAttributes = true)
