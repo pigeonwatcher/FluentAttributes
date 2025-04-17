@@ -30,6 +30,51 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
     }
 
     /// <summary>
+    /// Gets the <see cref="TypeAttributeMap"/> for the specified <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The mapped <see cref="Type"/>.</typeparam>
+    /// <returns>The <see cref="TypeAttributeMap"/> instances for the specified <typeparamref name="T"/>.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the <see cref="TypeAttributeMap"/> does not exist.</exception>
+    public TypeAttributeMap GetAttributeMap<T>()
+    {
+        if (TryGetAttributeMap<T>(out TypeAttributeMap? typeAttributeMap))
+        {
+            return typeAttributeMap;
+        }
+
+        throw new KeyNotFoundException($"No TypeAttributeMap found for type {typeof(T).FullName}.");
+    }
+
+    /// <summary>
+    /// Gets the <see cref="TypeAttributeMap"/> for the specified <see cref="Type"/>.
+    /// </summary>
+    /// <param name="type">The mapped <see cref="Type"/>.</param>
+    /// <returns>The <see cref="TypeAttributeMap"/> instances for the specified <see cref="Type"/>.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the <see cref="TypeAttributeMap"/> does not exist.</exception>
+    public TypeAttributeMap GetAttributeMap(Type type)
+    {
+        if (TryGetAttributeMap(type, out TypeAttributeMap? typeAttributeMap))
+        {
+            return typeAttributeMap;
+        }
+
+        throw new KeyNotFoundException($"No TypeAttributeMap found for type {type.FullName}.");
+    }
+
+    /// <summary>
+    /// Tries to get a <see cref="TypeAttributeMap"/> for the specified <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The mapped <see cref="Type"/>.</typeparam>
+    /// <param name="typeAttributeMap">The <see cref="TypeAttributeMap"/> instance, or <see langword="null"/> if not found.</param>
+    /// <returns>
+    /// <see langword="true"/> if the <paramref name="typeAttributeMap"/> was found; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryGetAttributeMap<T>([NotNullWhen(true)] out TypeAttributeMap? typeAttributeMap)
+    {
+        return TryGetAttributeMap(typeof(T), out typeAttributeMap);
+    }
+
+    /// <summary>
     /// Tries to get a <see cref="TypeAttributeMap"/> for the specified <paramref name="type"/>.
     /// </summary>
     /// <param name="type">The mapped <see cref="Type"/>.</param>
