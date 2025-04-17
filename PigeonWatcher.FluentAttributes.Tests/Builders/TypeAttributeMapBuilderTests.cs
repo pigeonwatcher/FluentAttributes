@@ -1,4 +1,5 @@
 using PigeonWatcher.FluentAttributes.Builders;
+using PigeonWatcher.FluentAttributes.Utilities;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -8,19 +9,24 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 {
     public class TypeAttributeMapBuilderTests
     {
-        private class TestAttribute : Attribute { }
+        private class TestAttribute : Attribute
+        {
+            public string? Property { get; set; }
+        }
 
-        [TestAttribute]
+        private class AnotherTestAttribute : Attribute { }
+
+        [Test]
         private class TestClass
         {
-            [TestAttribute]
+            [Test]
             public string TestProperty { get; set; } = string.Empty;
 
             public int AnotherProperty { get; set; }
         }
 
         [Fact]
-        public void Property_ShouldReturnPropertyAttributeMapBuilder()
+        public void Property_ShouldReturnPropertyAttributeMapBuilder_ForValidProperty()
         {
             // Arrange
             var builder = new TypeAttributeMapBuilder<TestClass>();
@@ -34,34 +40,46 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
         }
 
         [Fact]
-        public void Property_ShouldReuseExistingPropertyAttributeMapBuilder()
+        public void Property_ShouldThrowInvalidOperationException_ForNonPropertyExpression()
         {
             // Arrange
             var builder = new TypeAttributeMapBuilder<TestClass>();
-            var firstBuilder = builder.Property(x => x.TestProperty);
 
-            // Act
-            var secondBuilder = builder.Property(x => x.TestProperty);
-
-            // Assert
-            Assert.Same(firstBuilder, secondBuilder);
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => builder.Property(x => x.ToString()));
         }
 
         [Fact]
-        public void Build_ShouldIncludeAttributes_WhenAttributesAreSet()
+        public void Property_ShouldReturnSameBuilder_ForSameProperty()
         {
             // Arrange
             var builder = new TypeAttributeMapBuilder<TestClass>();
-            var testAttribute = new TestAttribute();
-            builder.WithAttribute(testAttribute);
+
+            // Act
+            var propertyBuilder1 = builder.Property(x => x.TestProperty);
+            var propertyBuilder2 = builder.Property(x => x.TestProperty);
+
+            // Assert
+            Assert.Same(propertyBuilder1, propertyBuilder2);
+        }
+
+        [Fact]
+        public void Build_ShouldCreateTypeAttributeMap_WithAttributesAndProperties()
+        {
+            // Arrange
+            var builder = new TypeAttributeMapBuilder<TestClass>();
+            builder.WithAttribute<TestAttribute>(attr => attr.Property = "TestValue");
+            builder.Property(x => x.TestProperty).WithAttribute<AnotherTestAttribute>(_ => { });
 
             // Act
             var result = builder.Build();
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(typeof(TestClass), result.Type);
             Assert.True(result.HasAttribute<TestAttribute>());
+            Assert.True(result.TryGetPropertyAttributeMap(nameof(TestClass.TestProperty), out var propertyMap));
+            Assert.NotNull(propertyMap);
+            Assert.True(propertyMap.HasAttribute<AnotherTestAttribute>());
         }
 
         [Fact]
@@ -75,8 +93,6 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
             var result = builder.Build();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(typeof(TestClass), result.Type);
             Assert.True(result.HasAttribute<TestAttribute>());
         }
 
@@ -90,92 +106,39 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
             var result = builder.Build();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(typeof(TestClass), result.Type);
             Assert.False(result.HasAttribute<TestAttribute>());
         }
 
         [Fact]
-        public void Build_ShouldIncludePropertyAttributeMaps_WhenPropertiesAreConfigured()
+        public void Build_ShouldIncludeBothAddedAndPredefinedAttributes()
         {
             // Arrange
             var builder = new TypeAttributeMapBuilder<TestClass>();
-            builder.Property(x => x.TestProperty).WithAttribute(new TestAttribute());
+            builder.WithAttribute<AnotherTestAttribute>(_ => { });
+            builder.IncludePredefinedAttributes(true);
 
             // Act
             var result = builder.Build();
 
             // Assert
-            Assert.NotNull(result);
+            Assert.True(result.HasAttribute<TestAttribute>());
+            Assert.True(result.HasAttribute<AnotherTestAttribute>());
+        }
+
+        [Fact]
+        public void Build_ShouldIncludePropertyAttributeMaps()
+        {
+            // Arrange
+            var builder = new TypeAttributeMapBuilder<TestClass>();
+            builder.Property(x => x.TestProperty).WithAttribute<TestAttribute>(_ => { });
+
+            // Act
+            var result = builder.Build();
+
+            // Assert
             Assert.True(result.TryGetPropertyAttributeMap(nameof(TestClass.TestProperty), out var propertyMap));
             Assert.NotNull(propertyMap);
             Assert.True(propertyMap.HasAttribute<TestAttribute>());
-        }
-
-        [Fact]
-        public void GetPropertyName_ShouldReturnCorrectPropertyName()
-        {
-            // Arrange
-            Expression<Func<TestClass, object?>> expression = x => x.TestProperty;
-
-            // Act
-            var propertyName = typeof(TypeAttributeMapBuilder<TestClass>)
-                .GetMethod("GetPropertyName", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.Invoke(null, new object[] { expression });
-
-            // Assert
-            Assert.Equal(nameof(TestClass.TestProperty), propertyName);
-        }
-
-        [Fact]
-        public void GetPropertyName_ShouldThrowException_ForInvalidExpression()
-        {
-            // Arrange
-            Expression<Func<TestClass, object?>> expression = x => x.GetHashCode();
-
-            // Act & Assert
-
-            var exception = Assert.Throws<TargetInvocationException>(() =>
-                typeof(TypeAttributeMapBuilder<TestClass>)
-                    .GetMethod("GetPropertyName", BindingFlags.NonPublic | BindingFlags.Static)
-                    ?.Invoke(null, new object[] { expression })
-            );
-
-            var innerException = Assert.IsType<InvalidOperationException>(exception.InnerException);
-            Assert.Equal("Invalid property selector expression", innerException.Message);
-        }
-
-        [Fact]
-        public void GetPropertyInfo_ShouldReturnCorrectPropertyInfo()
-        {
-            // Arrange
-            Expression<Func<TestClass, object?>> expression = x => x.TestProperty;
-
-            // Act
-            var propertyInfo = typeof(TypeAttributeMapBuilder<TestClass>)
-                .GetMethod("GetPropertyInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-                ?.Invoke(null, new object[] { expression });
-
-            // Assert
-            Assert.NotNull(propertyInfo);
-            Assert.Equal(nameof(TestClass.TestProperty), ((System.Reflection.PropertyInfo)propertyInfo!).Name);
-        }
-
-        [Fact]
-        public void GetPropertyInfo_ShouldThrowException_ForInvalidExpression()
-        {
-            // Arrange
-            Expression<Func<TestClass, object?>> expression = x => x.GetHashCode();
-
-            // Act & Assert
-            var exception = Assert.Throws<TargetInvocationException>(() =>
-                typeof(TypeAttributeMapBuilder<TestClass>)
-                    .GetMethod("GetPropertyInfo", BindingFlags.NonPublic | BindingFlags.Static)
-                    ?.Invoke(null, new object[] { expression })
-            );
-
-            var innerException = Assert.IsType<InvalidOperationException>(exception.InnerException);
-            Assert.Equal("Invalid property selector expression", innerException.Message);
         }
     }
 }

@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 namespace PigeonWatcher.FluentAttributes.Tests
 {
     public class SymbolAttributeMapTests
     {
-        private class TestSymbolAttributeMap : SymbolAttributeMap
-        {
-            // A concrete implementation of the abstract class for testing purposes.
-        }
+        private class TestSymbolAttributeMap : SymbolAttributeMap { }
 
         private class TestAttribute : Attribute { }
+
         private class AnotherTestAttribute : Attribute { }
 
         [Fact]
@@ -29,7 +28,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void AddAttribute_ShouldReturnFalseIfAttributeAlreadyExists()
+        public void AddAttribute_ShouldReturnFalse_WhenAttributeAlreadyExists()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -44,7 +43,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void HasAttribute_ShouldReturnTrueIfAttributeExists()
+        public void HasAttribute_ShouldReturnTrue_WhenAttributeExists()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -59,7 +58,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void HasAttribute_ShouldReturnFalseIfAttributeDoesNotExist()
+        public void HasAttribute_ShouldReturnFalse_WhenAttributeDoesNotExist()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -72,7 +71,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void TryGetAttribute_ShouldReturnTrueAndOutAttributeIfExists()
+        public void TryGetAttribute_ShouldReturnTrueAndAttribute_WhenAttributeExists()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -89,7 +88,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void TryGetAttribute_ShouldReturnFalseAndNullIfAttributeDoesNotExist()
+        public void TryGetAttribute_ShouldReturnFalseAndNull_WhenAttributeDoesNotExist()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -103,7 +102,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void GetAttribute_ShouldReturnAttributeIfExists()
+        public void GetAttribute_ShouldReturnAttribute_WhenAttributeExists()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();
@@ -119,7 +118,7 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void GetAttribute_ShouldThrowInvalidOperationExceptionIfAttributeDoesNotExist()
+        public void GetAttribute_ShouldThrowInvalidOperationException_WhenAttributeDoesNotExist()
         {
             // Arrange
             var map = new TestSymbolAttributeMap();

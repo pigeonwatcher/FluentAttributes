@@ -6,14 +6,21 @@ namespace PigeonWatcher.FluentAttributes.Tests
 {
     public class TypeAttributeMapContainerTests
     {
+        private class TestTypeAttributeMap : TypeAttributeMap
+        {
+            public TestTypeAttributeMap(Type type) : base(type) { }
+        }
+
         private class TestClass { }
+
+        private class AnotherTestClass { }
 
         [Fact]
         public void Add_ShouldAddTypeAttributeMapSuccessfully()
         {
             // Arrange
             var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TypeAttributeMap { Type = typeof(TestClass) };
+            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
 
             // Act
             var result = container.Add(typeAttributeMap);
@@ -23,11 +30,11 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void Add_ShouldReturnFalseIfTypeAlreadyExists()
+        public void Add_ShouldReturnFalse_WhenTypeAttributeMapAlreadyExists()
         {
             // Arrange
             var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TypeAttributeMap { Type = typeof(TestClass) };
+            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
             container.Add(typeAttributeMap);
 
             // Act
@@ -38,11 +45,61 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void TryGetAttributeMap_ShouldReturnTrueIfTypeExists()
+        public void GetAttributeMap_ByType_ShouldReturnTypeAttributeMap_WhenExists()
         {
             // Arrange
             var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TypeAttributeMap { Type = typeof(TestClass) };
+            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
+            container.Add(typeAttributeMap);
+
+            // Act
+            var result = container.GetAttributeMap(typeof(TestClass));
+
+            // Assert
+            Assert.Equal(typeAttributeMap, result);
+        }
+
+        [Fact]
+        public void GetAttributeMap_ByType_ShouldThrowKeyNotFoundException_WhenNotExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+
+            // Act & Assert
+            Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap(typeof(TestClass)));
+        }
+
+        [Fact]
+        public void GetAttributeMap_ByGenericType_ShouldReturnTypeAttributeMap_WhenExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+            var typeAttributeMap = new TypeAttributeMap<TestClass>();
+            container.Add(typeAttributeMap);
+
+            // Act
+            var result = container.GetAttributeMap<TestClass>();
+
+            // Assert
+            Assert.Equal(typeAttributeMap, result);
+        }
+
+        [Fact]
+        public void GetAttributeMap_ByGenericType_ShouldThrowKeyNotFoundException_WhenNotExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+
+            // Act & Assert
+            Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap<TestClass>());
+        }
+
+        [Fact]
+        public void TryGetAttributeMap_ByType_ShouldReturnTrueAndTypeAttributeMap_WhenExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
             container.Add(typeAttributeMap);
 
             // Act
@@ -50,12 +107,11 @@ namespace PigeonWatcher.FluentAttributes.Tests
 
             // Assert
             Assert.True(result);
-            Assert.NotNull(retrievedMap);
             Assert.Equal(typeAttributeMap, retrievedMap);
         }
 
         [Fact]
-        public void TryGetAttributeMap_ShouldReturnFalseIfTypeDoesNotExist()
+        public void TryGetAttributeMap_ByType_ShouldReturnFalseAndNull_WhenNotExists()
         {
             // Arrange
             var container = new TypeAttributeMapContainer();
@@ -69,14 +125,44 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
+        public void TryGetAttributeMap_ByGenericType_ShouldReturnTrueAndTypeAttributeMap_WhenExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+            var typeAttributeMap = new TypeAttributeMap<TestClass>();
+            container.Add(typeAttributeMap);
+
+            // Act
+            var result = container.TryGetAttributeMap<TestClass>(out var retrievedMap);
+
+            // Assert
+            Assert.True(result);
+            Assert.Equal(typeAttributeMap, retrievedMap);
+        }
+
+        [Fact]
+        public void TryGetAttributeMap_ByGenericType_ShouldReturnFalseAndNull_WhenNotExists()
+        {
+            // Arrange
+            var container = new TypeAttributeMapContainer();
+
+            // Act
+            var result = container.TryGetAttributeMap<TestClass>(out var retrievedMap);
+
+            // Assert
+            Assert.False(result);
+            Assert.Null(retrievedMap);
+        }
+
+        [Fact]
         public void GetEnumerator_ShouldEnumerateAllTypeAttributeMaps()
         {
             // Arrange
             var container = new TypeAttributeMapContainer();
-            var typeAttributeMap1 = new TypeAttributeMap { Type = typeof(TestClass) };
-            var typeAttributeMap2 = new TypeAttributeMap { Type = typeof(string) };
-            container.Add(typeAttributeMap1);
-            container.Add(typeAttributeMap2);
+            var map1 = new TestTypeAttributeMap(typeof(TestClass));
+            var map2 = new TestTypeAttributeMap(typeof(AnotherTestClass));
+            container.Add(map1);
+            container.Add(map2);
 
             // Act
             var enumeratedMaps = new List<TypeAttributeMap>();
@@ -86,8 +172,8 @@ namespace PigeonWatcher.FluentAttributes.Tests
             }
 
             // Assert
-            Assert.Contains(typeAttributeMap1, enumeratedMaps);
-            Assert.Contains(typeAttributeMap2, enumeratedMaps);
+            Assert.Contains(map1, enumeratedMaps);
+            Assert.Contains(map2, enumeratedMaps);
         }
     }
 }

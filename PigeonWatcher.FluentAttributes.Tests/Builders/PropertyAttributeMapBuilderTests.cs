@@ -10,28 +10,23 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
     {
         private class TestAttribute : Attribute
         {
+            public string? Property { get; set; }
         }
 
-        private PropertyInfo GetTestPropertyInfo(string propertyName)
-        {
-            return typeof(TestClass).GetProperty(propertyName)
-                ?? throw new InvalidOperationException($"Property '{propertyName}' not found.");
-        }
+        private class AnotherTestAttribute : Attribute { }
 
         private class TestClass
         {
-            [TestAttribute]
+            [Test]
             public string TestProperty { get; set; } = string.Empty;
         }
 
         [Fact]
-        public void Build_ShouldIncludeAttributes_WhenAttributesAreSet()
+        public void Build_ShouldCreatePropertyAttributeMap_WithPropertyInfo()
         {
             // Arrange
-            var propertyInfo = GetTestPropertyInfo(nameof(TestClass.TestProperty));
+            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
             var builder = new PropertyAttributeMapBuilder(propertyInfo);
-            var testAttribute = new TestAttribute();
-            builder.WithAttribute(testAttribute);
 
             // Act
             var result = builder.Build();
@@ -39,23 +34,38 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
             // Assert
             Assert.NotNull(result);
             Assert.Equal(propertyInfo, result.PropertyInfo);
+        }
+
+        [Fact]
+        public void Build_ShouldIncludeAttributesAddedViaWithAttribute()
+        {
+            // Arrange
+            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
+            var builder = new PropertyAttributeMapBuilder(propertyInfo);
+            var attribute = new TestAttribute { Property = "TestValue" };
+
+            // Act
+            builder.WithAttribute(attribute);
+            var result = builder.Build();
+
+            // Assert
             Assert.True(result.HasAttribute<TestAttribute>());
+            var retrievedAttribute = result.GetAttribute<TestAttribute>();
+            Assert.Equal("TestValue", retrievedAttribute.Property);
         }
 
         [Fact]
         public void Build_ShouldIncludePredefinedAttributes_WhenFlagIsSet()
         {
             // Arrange
-            var propertyInfo = GetTestPropertyInfo(nameof(TestClass.TestProperty));
+            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
             var builder = new PropertyAttributeMapBuilder(propertyInfo);
-            builder.IncludePredefinedAttributes(true);
 
             // Act
+            builder.IncludePredefinedAttributes(true);
             var result = builder.Build();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(propertyInfo, result.PropertyInfo);
             Assert.True(result.HasAttribute<TestAttribute>());
         }
 
@@ -63,16 +73,32 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
         public void Build_ShouldNotIncludePredefinedAttributes_WhenFlagIsNotSet()
         {
             // Arrange
-            var propertyInfo = GetTestPropertyInfo(nameof(TestClass.TestProperty));
+            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
             var builder = new PropertyAttributeMapBuilder(propertyInfo);
 
             // Act
             var result = builder.Build();
 
             // Assert
-            Assert.NotNull(result);
-            Assert.Equal(propertyInfo, result.PropertyInfo);
             Assert.False(result.HasAttribute<TestAttribute>());
+        }
+
+        [Fact]
+        public void Build_ShouldIncludeBothAddedAndPredefinedAttributes()
+        {
+            // Arrange
+            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
+            var builder = new PropertyAttributeMapBuilder(propertyInfo);
+            var customAttribute = new AnotherTestAttribute();
+
+            // Act
+            builder.WithAttribute(customAttribute);
+            builder.IncludePredefinedAttributes(true);
+            var result = builder.Build();
+
+            // Assert
+            Assert.True(result.HasAttribute<TestAttribute>());
+            Assert.True(result.HasAttribute<AnotherTestAttribute>());
         }
     }
 }

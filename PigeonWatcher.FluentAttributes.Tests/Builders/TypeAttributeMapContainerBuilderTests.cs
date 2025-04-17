@@ -9,59 +9,102 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 {
     public class TypeAttributeMapContainerBuilderTests
     {
-        private class TestEntity { }
-
         private class TestAttribute : Attribute { }
 
-        private class TestConfiguration : ITypeAttributeMapConfiguration<TestEntity>
+        private class TestClass { }
+
+        private class AnotherTestClass { }
+
+        private class TestConfiguration : ITypeAttributeMapConfiguration<TestClass>
         {
-            public void Configure(TypeAttributeMapBuilder<TestEntity> builder)
+            public void Configure(TypeAttributeMapBuilder<TestClass> builder)
             {
-                builder.WithAttribute(new TestAttribute());
+                builder.WithAttribute<TestAttribute>(_ => { });
+            }
+        }
+
+        private class AnotherTestConfiguration : ITypeAttributeMapConfiguration<AnotherTestClass>
+        {
+            public void Configure(TypeAttributeMapBuilder<AnotherTestClass> builder)
+            {
+                builder.WithAttribute<TestAttribute>(_ => { });
             }
         }
 
         [Fact]
-        public void ApplyConfigurationsFromAssembly_ShouldAddConfigurationsToContainer()
+        public void ApplyConfiguration_ShouldAddConfigurationToContainer()
         {
             // Arrange
             var builder = new TypeAttributeMapContainerBuilder();
-            var assembly = Assembly.GetExecutingAssembly();
+            var configuration = new TestConfiguration();
 
             // Act
-            builder.ApplyConfigurationsFromAssembly(assembly);
+            builder.ApplyConfiguration(configuration);
             var container = builder.Build();
 
             // Assert
             Assert.NotNull(container);
-            Assert.True(container.TryGetAttributeMap(typeof(TestEntity), out var typeAttributeMap));
+            Assert.True(container.TryGetAttributeMap<TestClass>(out var typeAttributeMap));
             Assert.NotNull(typeAttributeMap);
             Assert.True(typeAttributeMap.HasAttribute<TestAttribute>());
         }
 
         [Fact]
-        public void ApplyConfigurationsFromAssembly_ShouldHandleEmptyAssembly()
+        public void ApplyConfiguration_ShouldThrowArgumentNullException_WhenConfigurationIsNull()
         {
             // Arrange
             var builder = new TypeAttributeMapContainerBuilder();
-            var emptyAssembly = Assembly.Load("System.Runtime"); // An assembly unlikely to have configurations
 
-            // Act
-            builder.ApplyConfigurationsFromAssembly(emptyAssembly);
-            var container = builder.Build();
-
-            // Assert
-            Assert.NotNull(container);
-            Assert.False(container.TryGetAttributeMap(typeof(TestEntity), out _));
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => builder.ApplyConfiguration<TestClass>(null!));
         }
 
         [Fact]
-        public void Build_ShouldReturnContainerAndResetBuilder()
+        public void ApplyConfigurationsFromAssembly_ShouldAddAllConfigurationsFromAssembly()
         {
             // Arrange
             var builder = new TypeAttributeMapContainerBuilder();
             var assembly = Assembly.GetExecutingAssembly();
+
+            // Act
             builder.ApplyConfigurationsFromAssembly(assembly);
+            var container = builder.Build();
+
+            // Assert
+            Assert.NotNull(container);
+            Assert.True(container.TryGetAttributeMap<TestClass>(out var testClassMap));
+            Assert.NotNull(testClassMap);
+            Assert.True(testClassMap.HasAttribute<TestAttribute>());
+
+            Assert.True(container.TryGetAttributeMap<AnotherTestClass>(out var anotherTestClassMap));
+            Assert.NotNull(anotherTestClassMap);
+            Assert.True(anotherTestClassMap.HasAttribute<TestAttribute>());
+        }
+
+        [Fact]
+        public void Build_ShouldReturnTypeAttributeMapContainer()
+        {
+            // Arrange
+            var builder = new TypeAttributeMapContainerBuilder();
+            var configuration = new TestConfiguration();
+            builder.ApplyConfiguration(configuration);
+
+            // Act
+            var container = builder.Build();
+
+            // Assert
+            Assert.NotNull(container);
+            Assert.True(container.TryGetAttributeMap<TestClass>(out var typeAttributeMap));
+            Assert.NotNull(typeAttributeMap);
+        }
+
+        [Fact]
+        public void Build_ShouldResetContainerAfterBuild()
+        {
+            // Arrange
+            var builder = new TypeAttributeMapContainerBuilder();
+            var configuration = new TestConfiguration();
+            builder.ApplyConfiguration(configuration);
 
             // Act
             var container1 = builder.Build();
@@ -69,8 +112,7 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 
             // Assert
             Assert.NotNull(container1);
-            Assert.NotNull(container2);
-            Assert.NotSame(container1, container2); // Ensure the builder resets after building
+            Assert.Empty(container2); // The second build should return an empty container.
         }
     }
 }

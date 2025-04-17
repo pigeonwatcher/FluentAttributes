@@ -12,9 +12,9 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
             public string? Property { get; set; }
         }
 
-        private class TestSymbolAttributeMapBuilder : SymbolAttributeMapBuilder<TestSymbolAttributeMapBuilder>
-        {
-        }
+        private class AnotherTestAttribute : Attribute { }
+
+        private class TestSymbolAttributeMapBuilder : SymbolAttributeMapBuilder<TestSymbolAttributeMapBuilder> { }
 
         [Fact]
         public void IncludePredefinedAttributes_ShouldSetFlagCorrectly()
@@ -27,13 +27,6 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 
             // Assert
             Assert.True(builder.IncludePredefinedAttributesFlag);
-        }
-
-        [Fact]
-        public void IncludePredefinedAttributes_ShouldUnsetFlagCorrectly()
-        {
-            // Arrange
-            var builder = new TestSymbolAttributeMapBuilder();
 
             // Act
             builder.IncludePredefinedAttributes(false);
@@ -43,7 +36,7 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
         }
 
         [Fact]
-        public void WithAttribute_ShouldAddAttributeToList()
+        public void WithAttribute_ShouldAddAttributeSuccessfully()
         {
             // Arrange
             var builder = new TestSymbolAttributeMapBuilder();
@@ -54,11 +47,29 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 
             // Assert
             Assert.NotNull(builder.Attributes);
-            Assert.Contains(attribute, builder.Attributes);
+            Assert.Contains(attribute, builder.Attributes!);
         }
 
         [Fact]
-        public void WithAttribute_Generic_ShouldAddNewAttributeIfNotExists()
+        public void WithAttribute_ShouldAddMultipleAttributes()
+        {
+            // Arrange
+            var builder = new TestSymbolAttributeMapBuilder();
+            var attribute1 = new TestAttribute();
+            var attribute2 = new AnotherTestAttribute();
+
+            // Act
+            builder.WithAttribute(attribute1);
+            builder.WithAttribute(attribute2);
+
+            // Assert
+            Assert.NotNull(builder.Attributes);
+            Assert.Contains(attribute1, builder.Attributes!);
+            Assert.Contains(attribute2, builder.Attributes!);
+        }
+
+        [Fact]
+        public void WithAttribute_Generic_ShouldAddAndConfigureAttribute_WhenNotExists()
         {
             // Arrange
             var builder = new TestSymbolAttributeMapBuilder();
@@ -68,9 +79,9 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 
             // Assert
             Assert.NotNull(builder.Attributes);
-            var addedAttribute = Assert.Single(builder.Attributes);
-            Assert.IsType<TestAttribute>(addedAttribute);
-            Assert.Equal("TestValue", ((TestAttribute)addedAttribute).Property);
+            var attribute = Assert.Single(builder.Attributes!);
+            Assert.IsType<TestAttribute>(attribute);
+            Assert.Equal("TestValue", ((TestAttribute)attribute).Property);
         }
 
         [Fact]
@@ -85,9 +96,26 @@ namespace PigeonWatcher.FluentAttributes.Tests.Builders
 
             // Assert
             Assert.NotNull(builder.Attributes);
-            var addedAttribute = Assert.Single(builder.Attributes);
-            Assert.IsType<TestAttribute>(addedAttribute);
-            Assert.Equal("UpdatedValue", ((TestAttribute)addedAttribute).Property);
+            var attribute = Assert.Single(builder.Attributes!);
+            Assert.IsType<TestAttribute>(attribute);
+            Assert.Equal("UpdatedValue", ((TestAttribute)attribute).Property);
+        }
+
+        [Fact]
+        public void WithAttribute_Generic_ShouldAddMultipleAttributesOfDifferentTypes()
+        {
+            // Arrange
+            var builder = new TestSymbolAttributeMapBuilder();
+
+            // Act
+            builder.WithAttribute<TestAttribute>(attr => attr.Property = "TestValue");
+            builder.WithAttribute<AnotherTestAttribute>(_ => { });
+
+            // Assert
+            Assert.NotNull(builder.Attributes);
+            Assert.Equal(2, builder.Attributes!.Count);
+            Assert.Contains(builder.Attributes!, attr => attr is TestAttribute);
+            Assert.Contains(builder.Attributes!, attr => attr is AnotherTestAttribute);
         }
     }
 }
