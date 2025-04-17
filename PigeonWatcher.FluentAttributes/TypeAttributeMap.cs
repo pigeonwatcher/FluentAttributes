@@ -19,11 +19,16 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     /// </summary>
     public Type Type { get; } = type;
 
-    private Dictionary<string, PropertyAttributeMap>? _propertyAttributeMaps;
+    /// <summary>
+    /// The <see cref="PropertyAttributeMap"/>s for the properties belonging to the <see cref="Type"/>.
+    /// </summary>
+    public IEnumerable<PropertyAttributeMap> PropertyAttributeMaps => PropertyAttributeMapLookup.Values;
+
+    private Dictionary<string, PropertyAttributeMap>? _propertyAttributeMapLookup;
     /// <summary>
     /// The property maps for the properties belonging to the <see cref="Type"/>.
     /// </summary>
-    private Dictionary<string, PropertyAttributeMap> PropertyAttributeMaps => _propertyAttributeMaps ??= [];
+    private Dictionary<string, PropertyAttributeMap> PropertyAttributeMapLookup => _propertyAttributeMapLookup ??= [];
 
     /// <summary>
     /// Adds a <see cref="PropertyAttributeMap"/> for the specified <paramref name="propertyName"/>.
@@ -36,7 +41,7 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     /// </returns>
     public bool AddPropertyAttributeMap(string propertyName, PropertyAttributeMap propertyAttributeMap)
     {
-        return PropertyAttributeMaps.TryAdd(propertyName, propertyAttributeMap);
+        return PropertyAttributeMapLookup.TryAdd(propertyName, propertyAttributeMap);
     }
 
     /// <summary>
@@ -67,7 +72,7 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     /// </returns>
     public bool TryGetPropertyAttributeMap(string propertyName, [NotNullWhen(true)] out PropertyAttributeMap? propertyAttributeMap)
     {
-        return PropertyAttributeMaps.TryGetValue(propertyName, out propertyAttributeMap);
+        return PropertyAttributeMapLookup.TryGetValue(propertyName, out propertyAttributeMap);
     }
 }
 
