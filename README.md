@@ -3,11 +3,14 @@ An attribute library for .NET that uses a fluent interface for applying attribut
 
 ## Aim
 
-FluentAttributes aims to provide a flexible and clean way for applying C# attributes to classes, structs, properties, etc, without explicitly declaring attributes on the implementation itself. The benefit of this separation enables modification to the implementation metadata without needing to touch the original implementation. This is useful in projects where attributes may be added, changed or removed over time.
-
+**FluentAttributes** separates attribute metadata from implementation, enabling:
+- **Decoupled Metadata**: Manage attributes in configuration classes.
+- **Flexibility**: Change, add, or remove attributes without touching the original implementation.
+- **Cleaner Code**: Limit the amount of attributes in original implementation.
+  
 ## Get Started
 
-Create a class that derives from ITypeAttributeMapConfiguration with the generic set to the Type you want to map attributes to.
+1. **Create a Configuration** Create a class that derives from [ITypeAttributeMapConfiguration](PigeonWatcher.FluentAttributes/ITypeAttributeMapConfiguration.cs) with the generic set to the Type you want to map attributes to.
 
 ``` 
     public class ExampleAttributeMapConfiguration : ITypeAttributeMapConfiguration<Example>
@@ -23,21 +26,25 @@ Create a class that derives from ITypeAttributeMapConfiguration with the generic
     }
 ```
 
-The attributes definied in your ITypeAttributeMapConfiguration implementation can then be accessed via a TypeAttributeMapContainer. To create a TypeMapAttributeContainer, you can use the TypeAttributeMapBuilder class like so:
+2. **Build a Container**: Add your configuration to a [TypeMapAttributeContainer](PigeonWatcher.FluentAttributes/TypeAttributeMapContainer.cs).
 
-```
+```csharp
 TypeAttributeMapContainer container = new TypeAttributeMapContainerBuilder()
     .ApplyConfiguration(new ExampleAttributeMapConfiguration())
     .Build();
-```
-Or
-```
+
+// Or scan assembly.
 TypeAttributeMapContainer container = new TypeAttributeMapContainerBuilder()
     .ApplyConfigurationsFromAssembly(typeof(TypeAttributeMapContainerBuilder).Assembly)
     .Build();
 ```
 
-Attributes can then be accessed using ...
+3. **Retrieve mapped attributes** Attributes can then be retrieved by calling 'GetAttribute()':
+
+```csharp
+TypeAttributeMap<Example> exampleAttributeMap = container.GetAttributeMap<Example>();
+DataContractAttribute exampleDataContract = exampleAttributeMap.GetAttribute<DataContractAttribute>();
+```
 
 ## Limitations
 
