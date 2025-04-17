@@ -19,10 +19,10 @@ public class TypeAttributeMapContainerBuilder
     private TypeAttributeMapContainer Container => _container ??= [];
 
     /// <summary>
-    /// Adds a <see cref="TypeAttributeMap"/> to the container.
+    /// Applies configuration that is defined in the <see cref="ITypeAttributeMapConfiguration{T}"/> instance.
     /// </summary>
     /// <typeparam name="T">The mapped <see cref="Type"/>.</typeparam>
-    /// <param name="configuration">The <see cref="ITypeAttributeMapConfiguration{T}"/> to add.</param>
+    /// <param name="configuration">The <see cref="ITypeAttributeMapConfiguration{T}"/> to apply.</param>
     /// <returns>The same <see cref="TypeAttributeMapContainerBuilder"/> instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="configuration"/> is <see langword="null"/>.</exception>
     public TypeAttributeMapContainerBuilder ApplyConfiguration<T>(ITypeAttributeMapConfiguration<T> configuration)
@@ -37,7 +37,8 @@ public class TypeAttributeMapContainerBuilder
     }
 
     /// <summary>
-    /// Applies all <see cref="ITypeAttributeMapConfiguration{T}"/>'s from the specified assembly.
+    /// Applies configurations from all <see cref="ITypeAttributeMapConfiguration{T}"/> instances that are defined in
+    /// the provided assembly.
     /// </summary>
     /// <param name="assembly">The assembly containing the configurations.</param>
     /// <returns>The same <see cref="TypeAttributeMapContainerBuilder"/> instance.</returns>
