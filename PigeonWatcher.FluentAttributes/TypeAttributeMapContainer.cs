@@ -35,9 +35,9 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
     /// <typeparam name="T">The mapped <see cref="Type"/>.</typeparam>
     /// <returns>The <see cref="TypeAttributeMap"/> instances for the specified <typeparamref name="T"/>.</returns>
     /// <exception cref="KeyNotFoundException">Thrown if the <see cref="TypeAttributeMap"/> does not exist.</exception>
-    public TypeAttributeMap GetAttributeMap<T>()
+    public TypeAttributeMap<T> GetAttributeMap<T>()
     {
-        if (TryGetAttributeMap<T>(out TypeAttributeMap? typeAttributeMap))
+        if (TryGetAttributeMap<T>(out TypeAttributeMap<T>? typeAttributeMap))
         {
             return typeAttributeMap;
         }
@@ -69,9 +69,16 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
     /// <returns>
     /// <see langword="true"/> if the <paramref name="typeAttributeMap"/> was found; otherwise, <see langword="false"/>.
     /// </returns>
-    public bool TryGetAttributeMap<T>([NotNullWhen(true)] out TypeAttributeMap? typeAttributeMap)
+    public bool TryGetAttributeMap<T>([NotNullWhen(true)] out TypeAttributeMap<T>? typeAttributeMap)
     {
-        return TryGetAttributeMap(typeof(T), out typeAttributeMap);
+        if (TryGetAttributeMap(typeof(T), out TypeAttributeMap? foundTypeAttributeMap))
+        {
+            typeAttributeMap = (TypeAttributeMap<T>)foundTypeAttributeMap;
+            return true;
+        }
+
+        typeAttributeMap = null;
+        return false;
     }
 
     /// <summary>

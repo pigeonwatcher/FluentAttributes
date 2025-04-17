@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PigeonWatcher.FluentAttributes.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -21,16 +22,22 @@ public class TypeAttributeMapBuilder<T> : SymbolAttributeMapBuilder<TypeAttribut
     private Dictionary<string, PropertyAttributeMapBuilder> PropertyAttributeMapBuilders => _propertyAttributeMapBuilders ??= [];
 
     /// <summary>
-    /// Gets the <see cref="TypeAttributeMapBuilder{T}"/> instance from the <paramref name="propertyExpression"/>.
+    /// Gets the <see cref="TypeAttributeMapBuilder{T}"/> instance from the <paramref name="expression"/>.
     /// </summary>
-    /// <param name="propertyExpression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <param name="expression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
     /// <returns>A <see cref="PropertyAttributeMapBuilder"/> instance.</returns>
-    public PropertyAttributeMapBuilder Property(Expression<Func<T, object?>> propertyExpression)
+    public PropertyAttributeMapBuilder Property(Expression<Func<T, object?>> expression)
     {
-        string propertyName = GetPropertyName(propertyExpression);
+        MemberExpression memberExpression = ExpressionUtilities.GetMemberExpression(expression.Body);
+        if (!ExpressionUtilities.IsPropertyAccess(memberExpression))
+        {
+            throw new InvalidOperationException("The selected member is not a property.");
+        }
+
+        string propertyName = memberExpression.Member.Name;
         if (!PropertyAttributeMapBuilders.TryGetValue(propertyName, out PropertyAttributeMapBuilder? propertyAttributeMapBuilder))
         {
-            propertyAttributeMapBuilder = new PropertyAttributeMapBuilder(GetPropertyInfo(propertyExpression));
+            propertyAttributeMapBuilder = new PropertyAttributeMapBuilder(GetPropertyInfo(memberExpression));
             PropertyAttributeMapBuilders[propertyName] = propertyAttributeMapBuilder;
         }
 
@@ -41,12 +48,9 @@ public class TypeAttributeMapBuilder<T> : SymbolAttributeMapBuilder<TypeAttribut
     /// Builds the <see cref="TypeAttributeMap"/> instance.
     /// </summary>
     /// <returns>The built <see cref="TypeAttributeMap"/> instance.</returns>
-    public TypeAttributeMap Build()
+    public TypeAttributeMap<T> Build()
     {
-        TypeAttributeMap typeAttributeMap = new()
-        {
-            Type = typeof(T),
-        };
+        TypeAttributeMap<T> typeAttributeMap = new();
 
         if (Attributes is not null)
         {
@@ -76,50 +80,18 @@ public class TypeAttributeMapBuilder<T> : SymbolAttributeMapBuilder<TypeAttribut
     }
 
     /// <summary>
-    /// Gets the name of the property from the <paramref name="propertyExpression"/>.
+    /// Gets the <see cref="PropertyInfo"/> from the <paramref name="memberExpression"/>.
     /// </summary>
-    /// <param name="propertyExpression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
-    /// <returns>The property name.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the expression is does not select a valid property.</exception>
-    private static string GetPropertyName(Expression<Func<T, object?>> propertyExpression)
-    {
-        if (propertyExpression.Body is MemberExpression member)
-        {
-            return member.Member.Name;
-        }
-
-        if (propertyExpression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
-        {
-            return unaryMember.Member.Name;
-        }
-
-        throw new InvalidOperationException("Invalid property selector expression");
-    }
-
-    /// <summary>
-    /// Gets the <see cref="PropertyInfo"/> from the <paramref name="propertyExpression"/>.
-    /// </summary>
-    /// <param name="propertyExpression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <param name="memberExpression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
     /// <returns>The <see cref="PropertyInfo"/> from the expression.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the expression does not relate to a property.</exception>
-    private static PropertyInfo GetPropertyInfo(Expression<Func<T, object?>> propertyExpression)
+    private static PropertyInfo GetPropertyInfo(MemberExpression memberExpression)
     {
-        MemberExpression? memberExpr = propertyExpression.Body as MemberExpression;
-        if (memberExpr == null && propertyExpression.Body is UnaryExpression unary && unary.Operand is MemberExpression unaryMember)
+        if (memberExpression.Member is not PropertyInfo propertyInfo)
         {
-            memberExpr = unaryMember;
+            throw new InvalidOperationException("The selected member is not a property.");
         }
 
-        if (memberExpr == null)
-        {
-            throw new InvalidOperationException("Invalid property selector expression");
-        }
-
-        if (memberExpr.Member is PropertyInfo propertyInfo)
-        {
-            return propertyInfo;
-        }
-
-        throw new InvalidOperationException("The selected member is not a property.");
+        return propertyInfo;
     }
 }
