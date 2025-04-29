@@ -12,29 +12,39 @@ An attribute library for .NET that uses a fluent interface for applying attribut
 
 1. **Create a Configuration** Create a class that derives from [ITypeAttributeMapConfiguration](PigeonWatcher.FluentAttributes/ITypeAttributeMapConfiguration.cs) with the generic set to the Type you want to map attributes to.
 
-``` 
-    public class ExampleAttributeMapConfiguration : ITypeAttributeMapConfiguration<Example>
+```csharp
+public class ExampleAttributeMapConfiguration : ITypeAttributeMapConfiguration<Example>
+{
+    public void Configure(TypeAttributeMapBuilder<Example> builder)
     {
-        public void Configure(TypeAttributeMapBuilder<Example> builder)
-        {
-            builder.WithAttribute(new DataContractAttribute());
+        // Type-level attribute
+        builder.WithAttribute(new DataContractAttribute());
 
-            builder.Property(x => x.ExampleProperty)
-                .WithAttribute(new JsonPropertyNameAttribute("example_property"))
-                .WithAttribute(new DataMemberAttribute { Name = "example_property" });
-        }
+        // Property-level attribute
+        builder
+            .Property(x => x.ExampleProperty)
+            .WithAttribute(new DataMemberAttribute { Name = "example_property" });
+
+        // Field-level attribute
+        builder
+            .Field(x => x.ExampleField)
+            .WithAttribute(new DataMemberAttribute { Name = "example_field" });
     }
+}
 ```
 
 2. **Build a Container**: Add your configuration to a [TypeMapAttributeContainer](PigeonWatcher.FluentAttributes/TypeAttributeMapContainer.cs).
 
 ```csharp
-TypeAttributeMapContainer container = new TypeAttributeMapContainerBuilder()
+// Applying a single configuration
+TypeAttributeMapContainerBuilder container = new()
     .ApplyConfiguration(new ExampleAttributeMapConfiguration())
     .Build();
 
-// Or scan assembly.
-TypeAttributeMapContainer container = new TypeAttributeMapContainerBuilder()
+// — or —
+
+// Scanning all configurations in an assembly
+TypeAttributeMapContainerBuilder container = new()
     .ApplyConfigurationsFromAssembly(typeof(TypeAttributeMapContainerBuilder).Assembly)
     .Build();
 ```
@@ -42,10 +52,19 @@ TypeAttributeMapContainer container = new TypeAttributeMapContainerBuilder()
 3. **Retrieve mapped attributes** Attributes can then be retrieved by calling 'GetAttribute()':
 
 ```csharp
-TypeAttributeMap<Example> exampleAttributeMap = container.GetAttributeMap<Example>();
-DataContractAttribute exampleDataContract = exampleAttributeMap.GetAttribute<DataContractAttribute>();
+// Get the attribute map for 'Example'
+TypeAttributeMap<Example> exampleMap = container.GetAttributeMap<Example>();
+
+// Retrieve the DataContractAttribute on the type
+DataContractAttribute typeAttr = exampleMap.GetAttribute<DataContractAttribute>();
+
+// Retrieve the DataMemberAttribute on the property
+DataMemberAttribute propAttr = exampleMap
+    .Get(x => x.ExampleProperty)
+    .GetAttribute<DataMemberAttribute>();
+
+// Retrieve the DataMemberAttribute on the field
+DataMemberAttribute fieldAttr = exampleMap
+    .Get(x => x.ExampleField)
+    .GetAttribute<DataMemberAttribute>();
 ```
-
-## Limitations
-
-Currently, this library only supports attributes on classes, structs, enums and properties. Support for members such as fields and methods intend to be implemented in the future. 
