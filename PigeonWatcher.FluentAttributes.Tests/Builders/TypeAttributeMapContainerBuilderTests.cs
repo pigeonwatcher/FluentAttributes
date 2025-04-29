@@ -130,7 +130,7 @@ public class TypeAttributeMapContainerBuilderTests
 
     private class Example
     {
-        public string ExampleProperty { get; set; } = string.Empty;
         public int ExampleField;
+        public string ExampleProperty { get; } = string.Empty;
     }
 }
