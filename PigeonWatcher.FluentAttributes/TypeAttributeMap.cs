@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,59 +21,99 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     public Type Type { get; } = type;
 
     /// <summary>
-    /// The <see cref="PropertyAttributeMap"/>s for the properties belonging to the <see cref="Type"/>.
+    /// The <see cref="MemberAttributeMap"/>s for the members belonging to the <see cref="Type"/>.
     /// </summary>
-    public IEnumerable<PropertyAttributeMap> PropertyAttributeMaps => PropertyAttributeMapLookup.Values;
+    public IReadOnlyCollection<MemberAttributeMap> MemberAttributeMaps => MemberAttributeMapLookup.Values;
 
-    private Dictionary<string, PropertyAttributeMap>? _propertyAttributeMapLookup;
+    private Dictionary<string, MemberAttributeMap>? _memberAttributeMapLookup;
     /// <summary>
-    /// The property maps for the properties belonging to the <see cref="Type"/>.
+    /// The property maps for the members belonging to the <see cref="Type"/>.
     /// </summary>
-    private Dictionary<string, PropertyAttributeMap> PropertyAttributeMapLookup => _propertyAttributeMapLookup ??= [];
+    private Dictionary<string, MemberAttributeMap> MemberAttributeMapLookup => _memberAttributeMapLookup ??= [];
 
     /// <summary>
-    /// Adds a <see cref="PropertyAttributeMap"/> for the specified <paramref name="propertyName"/>.
+    /// Adds a <see cref="MemberAttributeMap"/> for a member of the <see cref="System.Type"/>.
     /// </summary>
-    /// <param name="propertyName">The property name.</param>
-    /// <param name="propertyAttributeMap">The <see cref="PropertyAttributeMap"/> instance.</param>
+    /// <param name="memberAttributeMap">The <see cref="MemberAttributeMap"/> instance.</param>
     /// <returns>
-    /// <see langword="true"/> if the <paramref name="propertyAttributeMap"/> was added successfully; otherwise,
+    /// <see langword="true"/> if the <paramref name="memberAttributeMap"/> was added successfully; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    public bool AddPropertyAttributeMap(string propertyName, PropertyAttributeMap propertyAttributeMap)
+    public bool Add(MemberAttributeMap memberAttributeMap)
     {
-        return PropertyAttributeMapLookup.TryAdd(propertyName, propertyAttributeMap);
+        string memberName = memberAttributeMap.MemberInfo.Name;
+        return MemberAttributeMapLookup.TryAdd(memberName, memberAttributeMap);
     }
 
     /// <summary>
-    /// Gets the <see cref="PropertyAttributeMap"/> for the specified <paramref name="propertyName"/>.
+    /// Gets the <see cref="MemberAttributeMap"/> for the specified <paramref name="memberName"/>.
     /// </summary>
-    /// <param name="propertyName">The property name.</param>
-    /// <returns>The <see cref="PropertyAttributeMap"/> with the <paramref name="propertyName"/>.</returns>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown if no <see cref="PropertyAttributeMap"/> with <paramref name="propertyName"/> is found.
-    /// </exception>
-    public PropertyAttributeMap GetPropertyAttributeMap(string propertyName)
+    /// <param name="memberName">The name of the member in its <see cref="MemberInfo"/>.</param>
+    /// <returns>The <see cref="MemberAttributeMap"/> instance.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the <see cref="MemberAttributeMap"/> is not found.</exception>
+    public MemberAttributeMap Get(string memberName)
     {
-        if (TryGetPropertyAttributeMap(propertyName, out PropertyAttributeMap? propertyAttributeMap))
+        if (TryGet(memberName, out MemberAttributeMap? memberAttributeMap))
         {
-            return propertyAttributeMap;
+            return memberAttributeMap;
         }
 
-        throw new KeyNotFoundException($"Property attribute map for '{propertyName}' not found.");
+        throw new KeyNotFoundException($"Member attribute map for '{memberName}' not found.");
     }
 
     /// <summary>
-    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="PropertyAttributeMap"/> for the specified <paramref name="propertyName"/>
+    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="MemberAttributeMap"/> for the specified 
+    /// <paramref name="memberName"/>
     /// </summary>
-    /// <param name="propertyName">The property name.</param>
-    /// <param name="propertyAttributeMap">The <see cref="PropertyAttributeMap"/> instance, or <see langword="null"/> if not found.</param>
+    /// <param name="memberName">The name of the member in its <see cref="MemberInfo"/>.</param>
+    /// <param name="memberAttributeMap">
+    /// The <see cref="MemberAttributeMap"/> instance, or <see langword="null"/> if not found.
+    /// </param>
     /// <returns>
-    /// <see langword="true"/> if the <paramref name="propertyAttributeMap"/> was found; otherwise, <see langword="false"/>.
+    /// <see langword="true"/> if the <paramref name="memberAttributeMap"/> was found; otherwise, <see langword="false"/>.
     /// </returns>
-    public bool TryGetPropertyAttributeMap(string propertyName, [NotNullWhen(true)] out PropertyAttributeMap? propertyAttributeMap)
+    public bool TryGet(string memberName, [NotNullWhen(true)] out MemberAttributeMap? memberAttributeMap)
     {
-        return PropertyAttributeMapLookup.TryGetValue(propertyName, out propertyAttributeMap);
+        return MemberAttributeMapLookup.TryGetValue(memberName, out memberAttributeMap);
+    }
+
+    /// <summary>
+    /// Gets the <see cref="MemberAttributeMap"/> for the specified <paramref name="memberName"/>.
+    /// </summary>
+    /// <typeparam name="TMemberAttributeMap">The <see cref="MemberAttributeMap"/> <see cref="System.Type"/>.</typeparam>
+    /// <param name="memberName">The name of the member in its <see cref="MemberInfo"/>.</param>
+    /// <returns>The <typeparamref name="TMemberAttributeMap"/> instance.</returns>
+    /// <exception cref="InvalidCastException">
+    /// Thrown if the <see cref="MemberAttributeMap"/> is not derived from <typeparamref name="TMemberAttributeMap"/>
+    /// </exception>
+    public TMemberAttributeMap Get<TMemberAttributeMap>(string memberName) where TMemberAttributeMap : MemberAttributeMap
+    {
+        return Get(memberName) as TMemberAttributeMap ?? throw new InvalidCastException($"Member attribute map for '{memberName}' does not derive from {typeof(TMemberAttributeMap)}.");
+    }
+
+    /// <summary>
+    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="MemberAttributeMap"/> for the specified 
+    /// <paramref name="memberName"/>
+    /// </summary>
+    /// <typeparam name="TMemberAttributeMap">The <see cref="MemberAttributeMap"/> <see cref="System.Type"/>.</typeparam>
+    /// <param name="memberName">The name of the member in its <see cref="MemberInfo"/>.</param>
+    /// <param name="memberAttributeMap">
+    /// The <typeparamref name="TMemberAttributeMap"/> instance, or <see langword="null"/> if not found.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the <paramref name="memberAttributeMap"/> was found; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryGet<TMemberAttributeMap>(string memberName, [NotNullWhen(true)] out TMemberAttributeMap? memberAttributeMap)
+        where TMemberAttributeMap : MemberAttributeMap
+    {
+        if (TryGet(memberName, out MemberAttributeMap? memberAttributeMapUncast))
+        {
+            memberAttributeMap = memberAttributeMapUncast as TMemberAttributeMap;
+            return memberAttributeMap != null;
+        }
+
+        memberAttributeMap = null;
+        return false;
     }
 }
 
@@ -85,45 +126,71 @@ public class TypeAttributeMap<T> : TypeAttributeMap
     /// </summary>
     public TypeAttributeMap() : base(typeof(T)) { }
 
-    /// <summary>
-    /// Gets the <see cref="PropertyAttributeMap"/> for the property defined in the <paramref name="expression"/>.
-    /// </summary>
-    /// <param name="expression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
-    /// <returns>The <see cref="PropertyAttributeMap"/> for the property.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the expression does not relate to a property.</exception>
-    public PropertyAttributeMap GetPropertyAttributeMap(Expression<Func<T, object?>> expression)
-    {
-        MemberExpression memberExpression = ExpressionUtilities.GetMemberExpression(expression.Body);
-        if (!ExpressionUtilities.IsPropertyAccess(memberExpression))
-        {
-            throw new InvalidOperationException("The selected member is not a property.");
-        }
+    // TODO: Add non-generic methods for getting the member attribute map.
 
-        string propertyName = memberExpression.Member.Name;
-        return GetPropertyAttributeMap(propertyName);
+    /// <summary>
+    /// Gets the <see cref="MemberAttributeMap"/> for the member defined in the <paramref name="expression"/>.
+    /// </summary>
+    /// <param name="expression">Expression to select a member belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <returns>The  <see cref="MemberAttributeMap"/> instance.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the <see cref="MemberAttributeMap"/> is not found.</exception>
+    public MemberAttributeMap Get(Expression<Func<T, object?>> expression)
+    {
+        MemberInfo memberInfo = ExpressionUtilities.GetMemberInfo(expression);
+        string propertyName = memberInfo.Name;
+        return Get(propertyName);
     }
 
     /// <summary>
-    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="PropertyAttributeMap"/> for the property defined 
-    /// in the <paramref name="expression"/>.
+    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="MemberAttributeMap"/> for the member defined in 
+    /// the <paramref name="expression"/>.
     /// </summary>
-    /// <param name="expression">Expression to select a property belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
-    /// <param name="propertyAttributeMap">
-    /// The <see cref="PropertyAttributeMap"/> instance, or <see langword="null"/> if not found.
+    /// <param name="expression">Expression to select a member belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <param name="memberAttributeMap">
+    /// The <see cref="MemberAttributeMap"/> instance, or <see langword="null"/> if not found.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if the <paramref name="propertyAttributeMap"/> was found; otherwise, <see langword="false"/>.
+    /// <see langword="true"/> if the <paramref name="memberAttributeMap"/> was found; otherwise, <see langword="false"/>.
     /// </returns>
-    /// <exception cref="InvalidOperationException">Thrown if the expression does not relate to a property.</exception>
-    public bool TryGetPropertyAttributeMap(Expression<Func<T, object?>> expression, [NotNullWhen(true)] out PropertyAttributeMap? propertyAttributeMap)
+    public bool TryGet(Expression<Func<T, object?>> expression, [NotNullWhen(true)] out MemberAttributeMap? memberAttributeMap)
     {
-        MemberExpression memberExpression = ExpressionUtilities.GetMemberExpression(expression.Body);
-        if (!ExpressionUtilities.IsPropertyAccess(memberExpression))
-        {
-            throw new InvalidOperationException("The selected member is not a property.");
-        }
+        MemberInfo memberInfo = ExpressionUtilities.GetMemberInfo(expression);
+        string propertyName = memberInfo.Name;
+        return TryGet(propertyName, out memberAttributeMap);
+    }
 
-        string propertyName = memberExpression.Member.Name;
-        return TryGetPropertyAttributeMap(propertyName, out propertyAttributeMap);
+    /// <summary>
+    /// Gets the <see cref="MemberAttributeMap"/> for the member defined in the <paramref name="expression"/>.
+    /// </summary>
+    /// <typeparam name="TMemberAttributeMap">The <see cref="MemberAttributeMap"/> <see cref="Type"/>.</typeparam>
+    /// <param name="expression">Expression to select a member belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <returns>The <typeparamref name="TMemberAttributeMap"/> instance.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown if the <see cref="MemberAttributeMap"/> is not found.</exception>
+    public TMemberAttributeMap Get<TMemberAttributeMap>(Expression<Func<T, object?>> expression)
+        where TMemberAttributeMap : MemberAttributeMap
+    {
+        MemberInfo memberInfo = ExpressionUtilities.GetMemberInfo(expression);
+        string propertyName = memberInfo.Name;
+        return Get<TMemberAttributeMap>(propertyName);
+    }
+
+    /// <summary>
+    /// Checks if the <see cref="TypeAttributeMap"/> has a <see cref="MemberAttributeMap"/> for the member defined in 
+    /// the <paramref name="expression"/>.
+    /// </summary>
+    /// <typeparam name="TMemberAttributeMap">The <see cref="MemberAttributeMap"/> <see cref="System.Type"/>.</typeparam>
+    /// <param name="expression">Expression to select a member belonging to the <see cref="TypeAttributeMap.Type"/>.</param>
+    /// <param name="memberAttributeMap">
+    /// The <typeparamref name="TMemberAttributeMap"/> instance, or <see langword="null"/> if not found.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the <paramref name="memberAttributeMap"/> was found; otherwise, <see langword="false"/>.
+    /// </returns>
+    public bool TryGet<TMemberAttributeMap>(Expression<Func<T, object?>> expression, [NotNullWhen(true)] out TMemberAttributeMap? memberAttributeMap)
+        where TMemberAttributeMap : MemberAttributeMap
+    {
+        MemberInfo memberInfo = ExpressionUtilities.GetMemberInfo(expression);
+        string propertyName = memberInfo.Name;
+        return TryGet(propertyName, out memberAttributeMap);
     }
 }

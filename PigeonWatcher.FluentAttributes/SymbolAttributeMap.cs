@@ -13,12 +13,14 @@ namespace PigeonWatcher.FluentAttributes;
 /// </summary>
 public abstract class SymbolAttributeMap
 {
-    private Dictionary<Type, Attribute>? _attributes;
+    public IEnumerable<Attribute> Attributes => AttributesLookup.Values;
+
+    private Dictionary<Type, Attribute>? _attributesLookup;
     /// <summary>
     /// The symbol <see cref="Attribute"/>s. The key is the <see cref="Attribute"/> <see cref="Type"/>, and the value is 
     /// the <see cref="Attribute"/> instance.
     /// </summary>
-    private Dictionary<Type, Attribute> Attributes => _attributes ??= [];
+    private Dictionary<Type, Attribute> AttributesLookup => _attributesLookup ??= [];
 
     /// <summary>
     /// Adds an <see cref="Attribute"/> to the symbol.
@@ -30,7 +32,7 @@ public abstract class SymbolAttributeMap
     public bool AddAttribute(Attribute attribute)
     {
         ArgumentNullException.ThrowIfNull(attribute);
-        return Attributes.TryAdd(attribute.GetType(), attribute);
+        return AttributesLookup.TryAdd(attribute.GetType(), attribute);
     }
 
     /// <summary>
@@ -43,7 +45,7 @@ public abstract class SymbolAttributeMap
     /// </returns>
     public bool HasAttribute<T>() where T : Attribute
     {
-        return Attributes.ContainsKey(typeof(T));
+        return AttributesLookup.ContainsKey(typeof(T));
     }
 
     /// <summary>
@@ -59,7 +61,7 @@ public abstract class SymbolAttributeMap
     /// </returns>
     public bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute) where T : Attribute
     {
-        if (Attributes.TryGetValue(typeof(T), out Attribute? foundAttribute))
+        if (AttributesLookup.TryGetValue(typeof(T), out Attribute? foundAttribute))
         {
             attribute = (T)foundAttribute;
             return true;
@@ -79,7 +81,7 @@ public abstract class SymbolAttributeMap
     /// </exception>
     public T GetAttribute<T>() where T : Attribute
     {
-        if (Attributes.TryGetValue(typeof(T), out Attribute? foundAttribute))
+        if (AttributesLookup.TryGetValue(typeof(T), out Attribute? foundAttribute))
         {
             return (T)foundAttribute;
         }

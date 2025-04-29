@@ -10,12 +10,13 @@ namespace PigeonWatcher.FluentAttributes;
 /// <summary>
 /// A <see cref="SymbolAttributeMap"/> for mapping <see cref="Attribute"/>s to properties.
 /// </summary>
-public class PropertyAttributeMap : SymbolAttributeMap
+/// <param name="propertyInfo">The <see cref="System.Reflection.PropertyInfo"/> of the mapped property.</param>
+public class PropertyAttributeMap(PropertyInfo propertyInfo) : MemberAttributeMap(propertyInfo)
 {
     /// <summary>
-    /// The <see cref="PropertyInfo"/> of the mapped property.
+    /// The <see cref="System.Reflection.PropertyInfo"/> of the mapped property.
     /// </summary>
-    public required PropertyInfo PropertyInfo { get; init; }
+    public PropertyInfo PropertyInfo { get; } = propertyInfo;
 
     /// <summary>
     /// The property <see cref="Type"/>.

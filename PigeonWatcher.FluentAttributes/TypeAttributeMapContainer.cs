@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,7 +39,7 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
     /// <exception cref="KeyNotFoundException">Thrown if the <see cref="TypeAttributeMap"/> does not exist.</exception>
     public TypeAttributeMap<T> GetAttributeMap<T>()
     {
-        if (TryGetAttributeMap<T>(out TypeAttributeMap<T>? typeAttributeMap))
+        if (TryGetAttributeMap(out TypeAttributeMap<T>? typeAttributeMap))
         {
             return typeAttributeMap;
         }

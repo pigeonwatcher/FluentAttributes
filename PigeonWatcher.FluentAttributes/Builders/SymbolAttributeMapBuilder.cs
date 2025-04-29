@@ -10,7 +10,7 @@ namespace PigeonWatcher.FluentAttributes.Builders;
 /// <summary>
 /// The base builder class for all <see cref="SymbolAttributeMap"/> builders.
 /// </summary>
-public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder : SymbolAttributeMapBuilder<TMapBuilder>
+public abstract class SymbolAttributeMapBuilder
 {
     /// <summary>
     /// The symbol <see cref="Attribute"/>s.
@@ -28,23 +28,23 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// <param name="includePredefinedAttributes">
     /// <see langword="true"/> to include predefined attributes; otherwise, <see langword="false"/>.
     /// </param>
-    /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
-    public TMapBuilder IncludePredefinedAttributes(bool includePredefinedAttributes = true)
+    /// <returns>The <see cref="SymbolAttributeMapBuilder"/> instance.</returns>
+    public virtual SymbolAttributeMapBuilder IncludePredefinedAttributes(bool includePredefinedAttributes = true)
     {
         IncludePredefinedAttributesFlag = includePredefinedAttributes;
-        return (TMapBuilder)this;
+        return this;
     }
 
     /// <summary>
     /// Adds an <see cref="Attribute"/> to the symbol map.
     /// </summary>
     /// <param name="attribute">The <see cref="Attribute"/> instance.</param>
-    /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
-    public TMapBuilder WithAttribute(Attribute attribute)
+    /// <returns>The <see cref="SymbolAttributeMapBuilder"/> instance.</returns>
+    public virtual SymbolAttributeMapBuilder WithAttribute(Attribute attribute)
     {
         Attributes ??= [];
         Attributes.Add(attribute);
-        return (TMapBuilder)this;
+        return this;
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// parameterless constructor.
     /// </typeparam>
     /// <param name="configure">=An <see cref="Action"/> to configure the <see cref="Attribute"/>.</param>
-    /// <returns>The <see cref="TMapBuilder"/> instance.</returns>
+    /// <returns>The <see cref="SymbolAttributeMapBuilder"/> instance.</returns>
     /// <example>
     /// This example demonstrates how to add an <c>ExampleAttribute</c> and configure its <c>Property</c> member:
     /// <code>
@@ -66,7 +66,7 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
     /// });
     /// </code>
     /// </example>
-    public TMapBuilder WithAttribute<TAttribute>(Action<TAttribute> configure)
+    public virtual SymbolAttributeMapBuilder WithAttribute<TAttribute>(Action<TAttribute> configure)
         where TAttribute : Attribute, new()
     {
         Attributes ??= [];
@@ -79,7 +79,49 @@ public abstract class SymbolAttributeMapBuilder<TMapBuilder> where TMapBuilder :
 
         configure((TAttribute)attribute);
 
-        return (TMapBuilder)this;
+        return this;
     }
 
+    /// <summary>
+    /// Builds the <see cref="SymbolAttributeMap"/> instance.
+    /// </summary>
+    /// <returns>The <see cref="SymbolAttributeMap"/> instance.</returns>
+    public abstract SymbolAttributeMap Build();
+
+    /// <summary>
+    /// Adds the <see cref="Attribute"/> instances to the <see cref="SymbolAttributeMap"/>. This is expected to be called
+    /// in the <see cref="Build"/> method.
+    /// </summary>
+    /// <param name="symbolAttributeMap">The <see cref="SymbolAttributeMap"/> instance.</param>
+    protected void BuildAttributes(SymbolAttributeMap symbolAttributeMap)
+    {
+        if (Attributes == null)
+        {
+            return;
+        }
+
+        foreach (Attribute attribute in Attributes)
+        {
+            symbolAttributeMap.AddAttribute(attribute);
+        }
+    }
+
+    /// <summary>
+    /// Adds the predefined <see cref="Attribute"/> instances to the <see cref="SymbolAttributeMap"/>. This is expected
+    /// in the <see cref="Build"/> method.
+    /// </summary>
+    /// <param name="symbolAttributeMap">The <see cref="SymbolAttributeMap"/> instance.</param>
+    /// <param name="predefinedAttributes">An <see cref="IEnumerable{T}"/> of predefined <see cref="Attribute"/> instances.</param>
+    protected void BuildPredefinedAttributes(SymbolAttributeMap symbolAttributeMap, IEnumerable<Attribute> predefinedAttributes)
+    {
+        if (!IncludePredefinedAttributesFlag)
+        {
+            return;
+        }
+
+        foreach (Attribute attribute in predefinedAttributes)
+        {
+            symbolAttributeMap.AddAttribute(attribute);
+        }
+    }
 }

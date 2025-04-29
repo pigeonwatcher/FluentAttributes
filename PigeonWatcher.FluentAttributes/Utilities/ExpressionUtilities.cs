@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,35 +15,31 @@ namespace PigeonWatcher.FluentAttributes.Utilities;
 public static class ExpressionUtilities
 {
     /// <summary>
-    /// Checks if the <paramref name="memberExpression"/> is a property access expression.
+    /// Extracts the <see cref="MethodInfo"/> from the <paramref name="expression"/>.
     /// </summary>
-    /// <param name="memberExpression">The <see cref="MemberExpression"/> to check.</param>
-    /// <returns>
-    /// <see langword="true"/> if the <paramref name="memberExpression"/> is a property access expression; otherwise,
-    /// <see langword="false"/>.
-    /// </returns>
-    public static bool IsPropertyAccess(MemberExpression memberExpression)
-    => memberExpression.Member is PropertyInfo;
-
-    /// <summary>
-    /// Converts the <paramref name="expression"/> to a <see cref="MemberExpression"/>.
-    /// </summary>
-    /// <param name="expression">The <see cref="Expression"/> to convert.</param>
-    /// <returns>The converted <see cref="MemberExpression"/>.</returns>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if <paramref name="expression"/> cannot be converted to a <see cref="MemberExpression"/>.
-    /// </exception>
-    public static MemberExpression GetMemberExpression(Expression expression)
+    /// <param name="expression">A <see cref="LambdaExpression"/> that accesses a member.</param>
+    /// <returns>The <see cref="MethodInfo"/> referred to in the <paramref name="expression"/>.</returns>
+    public static MemberInfo GetMemberInfo(LambdaExpression expression)
     {
-        if (expression is MemberExpression memberExpression)
+        if (expression == null)
         {
-            return memberExpression;
-        }
-        else if (expression is UnaryExpression unaryExpression && unaryExpression.Operand is MemberExpression innerMemberExpression)
-        {
-            return innerMemberExpression;
+            throw new ArgumentNullException(nameof(expression));
         }
 
-        throw new InvalidOperationException("The expression cannot be converted to a member expression.");
+        Expression body = expression.Body;
+        if (body is UnaryExpression unaryExpression && unaryExpression.NodeType == ExpressionType.Convert)
+        {
+            body = unaryExpression.Operand;
+        }
+
+        switch (body)
+        {
+            case MemberExpression memberExpression:
+                return memberExpression.Member;
+            case MethodCallExpression methodCallExpression:
+                return methodCallExpression.Method;
+            default:
+                throw new ArgumentException("Expression must be a simple member access (field/property) or method call.", nameof(expression));
+        }
     }
 }
