@@ -17,6 +17,18 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
 {
     private readonly Dictionary<Type, TypeAttributeMap> _typeAttributeMaps = [];
 
+    /// <inheritdoc/>
+    public IEnumerator<TypeAttributeMap> GetEnumerator()
+    {
+        return _typeAttributeMaps.Values.GetEnumerator();
+    }
+
+    /// <inheritdoc/>
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
     /// <summary>
     /// Adds a <see cref="TypeAttributeMap"/> to the model.
     /// </summary>
@@ -94,17 +106,5 @@ public sealed class TypeAttributeMapContainer : IEnumerable<TypeAttributeMap>
     public bool TryGetAttributeMap(Type type, [NotNullWhen(true)] out TypeAttributeMap? typeAttributeMap)
     {
         return _typeAttributeMaps.TryGetValue(type, out typeAttributeMap);
-    }
-
-    /// <inheritdoc/>
-    public IEnumerator<TypeAttributeMap> GetEnumerator()
-    {
-        return _typeAttributeMaps.Values.GetEnumerator();
-    }
-
-    /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
     }
 }

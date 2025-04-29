@@ -25,5 +25,3 @@ public class PropertyAttributeMapBuilder(PropertyInfo propertyInfo) : MemberAttr
         return propertyAttributeMap;
     }
 }
-
-

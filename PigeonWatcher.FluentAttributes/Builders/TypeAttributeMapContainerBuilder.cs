@@ -13,6 +13,7 @@ namespace PigeonWatcher.FluentAttributes.Builders;
 public class TypeAttributeMapContainerBuilder
 {
     private TypeAttributeMapContainer? _container;
+
     /// <summary>
     /// The <see cref="TypeAttributeMapContainer"/> instance being built.
     /// </summary>

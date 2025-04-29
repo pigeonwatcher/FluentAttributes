@@ -13,9 +13,9 @@ namespace PigeonWatcher.FluentAttributes;
 /// </summary>
 public abstract class SymbolAttributeMap
 {
+    private Dictionary<Type, Attribute>? _attributesLookup;
     public IEnumerable<Attribute> Attributes => AttributesLookup.Values;
 
-    private Dictionary<Type, Attribute>? _attributesLookup;
     /// <summary>
     /// The symbol <see cref="Attribute"/>s. The key is the <see cref="Attribute"/> <see cref="Type"/>, and the value is 
     /// the <see cref="Attribute"/> instance.

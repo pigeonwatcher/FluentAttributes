@@ -16,6 +16,7 @@ namespace PigeonWatcher.FluentAttributes.Builders;
 public class TypeAttributeMapBuilder<T> : SymbolAttributeMapBuilder
 {
     private Dictionary<string, MemberAttributeMapBuilder>? _memberAttributeMapBuilders;
+
     /// <summary>
     /// The <see cref="MemberAttributeMapBuilder"/> instances for the members belonging to the <see cref="TypeAttributeMap.Type"/>. 
     /// </summary>

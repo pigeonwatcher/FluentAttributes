@@ -15,6 +15,8 @@ namespace PigeonWatcher.FluentAttributes;
 /// </summary>
 public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
 {
+    private Dictionary<string, MemberAttributeMap>? _memberAttributeMapLookup;
+
     /// <summary>
     /// The symbol type.
     /// </summary>
@@ -25,7 +27,6 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     /// </summary>
     public IReadOnlyCollection<MemberAttributeMap> MemberAttributeMaps => MemberAttributeMapLookup.Values;
 
-    private Dictionary<string, MemberAttributeMap>? _memberAttributeMapLookup;
     /// <summary>
     /// The property maps for the members belonging to the <see cref="Type"/>.
     /// </summary>
@@ -88,7 +89,8 @@ public abstract class TypeAttributeMap(Type type) : SymbolAttributeMap
     /// </exception>
     public TMemberAttributeMap Get<TMemberAttributeMap>(string memberName) where TMemberAttributeMap : MemberAttributeMap
     {
-        return Get(memberName) as TMemberAttributeMap ?? throw new InvalidCastException($"Member attribute map for '{memberName}' does not derive from {typeof(TMemberAttributeMap)}.");
+        return Get(memberName) as TMemberAttributeMap ??
+               throw new InvalidCastException($"Member attribute map for '{memberName}' does not derive from {typeof(TMemberAttributeMap)}.");
     }
 
     /// <summary>
@@ -124,7 +126,9 @@ public class TypeAttributeMap<T> : TypeAttributeMap
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeAttributeMap{T}"/> class.
     /// </summary>
-    public TypeAttributeMap() : base(typeof(T)) { }
+    public TypeAttributeMap() : base(typeof(T))
+    {
+    }
 
     // TODO: Add non-generic methods for getting the member attribute map.
 

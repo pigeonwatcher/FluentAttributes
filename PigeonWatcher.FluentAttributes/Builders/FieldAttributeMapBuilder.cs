@@ -25,5 +25,3 @@ public class FieldAttributeMapBuilder(FieldInfo fieldInfo) : MemberAttributeMapB
         return fieldAttributeMap;
     }
 }
-
-
