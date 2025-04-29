@@ -2,179 +2,40 @@ using System;
 using System.Reflection;
 using Xunit;
 
-namespace PigeonWatcher.FluentAttributes.Tests
+namespace PigeonWatcher.FluentAttributes.Tests;
+
+public class PropertyAttributeMapTests
 {
-    public class PropertyAttributeMapTests
+    [Fact]
+    public void Constructor_ShouldInitializePropertyInfo()
     {
-        private class TestAttribute : Attribute { }
+        // Arrange
+        PropertyInfo propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
 
-        private class TestClass
-        {
-            [Test]
-            public string TestProperty { get; set; } = string.Empty;
-        }
+        // Act
+        PropertyAttributeMap map = new(propertyInfo);
 
-        [Fact]
-        public void PropertyInfo_ShouldReturnCorrectPropertyInfo()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
+        // Assert
+        Assert.NotNull(map.PropertyInfo);
+        Assert.Equal(propertyInfo, map.PropertyInfo);
+    }
 
-            // Act
-            var result = map.PropertyInfo;
+    [Fact]
+    public void PropertyType_ShouldReturnCorrectType()
+    {
+        // Arrange
+        PropertyInfo propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
+        PropertyAttributeMap map = new(propertyInfo);
 
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(propertyInfo, result);
-        }
+        // Act
+        Type propertyType = map.PropertyType;
 
-        [Fact]
-        public void PropertyType_ShouldReturnCorrectPropertyType()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
+        // Assert
+        Assert.Equal(typeof(int), propertyType);
+    }
 
-            // Act
-            var result = map.PropertyType;
-
-            // Assert
-            Assert.Equal(typeof(string), result);
-        }
-
-        [Fact]
-        public void AddAttribute_ShouldAddAttributeSuccessfully()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-            var attribute = new TestAttribute();
-
-            // Act
-            var result = map.AddAttribute(attribute);
-
-            // Assert
-            Assert.True(result);
-            Assert.True(map.HasAttribute<TestAttribute>());
-        }
-
-        [Fact]
-        public void HasAttribute_ShouldReturnTrue_WhenAttributeExists()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-            var attribute = new TestAttribute();
-            map.AddAttribute(attribute);
-
-            // Act
-            var result = map.HasAttribute<TestAttribute>();
-
-            // Assert
-            Assert.True(result);
-        }
-
-        [Fact]
-        public void HasAttribute_ShouldReturnFalse_WhenAttributeDoesNotExist()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-
-            // Act
-            var result = map.HasAttribute<TestAttribute>();
-
-            // Assert
-            Assert.False(result);
-        }
-
-        [Fact]
-        public void TryGetAttribute_ShouldReturnTrueAndAttribute_WhenAttributeExists()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-            var attribute = new TestAttribute();
-            map.AddAttribute(attribute);
-
-            // Act
-            var result = map.TryGetAttribute<TestAttribute>(out var retrievedAttribute);
-
-            // Assert
-            Assert.True(result);
-            Assert.NotNull(retrievedAttribute);
-            Assert.IsType<TestAttribute>(retrievedAttribute);
-        }
-
-        [Fact]
-        public void TryGetAttribute_ShouldReturnFalseAndNull_WhenAttributeDoesNotExist()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-
-            // Act
-            var result = map.TryGetAttribute<TestAttribute>(out var retrievedAttribute);
-
-            // Assert
-            Assert.False(result);
-            Assert.Null(retrievedAttribute);
-        }
-
-        [Fact]
-        public void GetAttribute_ShouldReturnAttribute_WhenAttributeExists()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-            var attribute = new TestAttribute();
-            map.AddAttribute(attribute);
-
-            // Act
-            var retrievedAttribute = map.GetAttribute<TestAttribute>();
-
-            // Assert
-            Assert.NotNull(retrievedAttribute);
-            Assert.IsType<TestAttribute>(retrievedAttribute);
-        }
-
-        [Fact]
-        public void GetAttribute_ShouldThrowInvalidOperationException_WhenAttributeDoesNotExist()
-        {
-            // Arrange
-            var propertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!;
-            var map = new PropertyAttributeMap
-            {
-                PropertyInfo = propertyInfo
-            };
-
-            // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => map.GetAttribute<TestAttribute>());
-        }
+    private class TestClass
+    {
+        public int TestProperty { get; set; }
     }
 }

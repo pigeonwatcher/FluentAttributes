@@ -1,179 +1,177 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
-namespace PigeonWatcher.FluentAttributes.Tests
+namespace PigeonWatcher.FluentAttributes.Tests;
+
+public class TypeAttributeMapContainerTests
 {
-    public class TypeAttributeMapContainerTests
+    [Fact]
+    public void Add_ShouldAddTypeAttributeMap()
     {
-        private class TestTypeAttributeMap : TypeAttributeMap
-        {
-            public TestTypeAttributeMap(Type type) : base(type) { }
-        }
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
 
-        private class TestClass { }
+        // Act
+        bool result = container.Add(typeAttributeMap);
 
-        private class AnotherTestClass { }
+        // Assert
+        Assert.True(result);
+        Assert.Contains(typeAttributeMap, container);
+    }
 
-        [Fact]
-        public void Add_ShouldAddTypeAttributeMapSuccessfully()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
+    [Fact]
+    public void Add_ShouldReturnFalseIfTypeAlreadyExists()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
+        container.Add(typeAttributeMap);
 
-            // Act
-            var result = container.Add(typeAttributeMap);
+        // Act
+        bool result = container.Add(typeAttributeMap);
 
-            // Assert
-            Assert.True(result);
-        }
+        // Assert
+        Assert.False(result);
+    }
 
-        [Fact]
-        public void Add_ShouldReturnFalse_WhenTypeAttributeMapAlreadyExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
-            container.Add(typeAttributeMap);
+    [Fact]
+    public void GetAttributeMap_ShouldReturnTypeAttributeMapIfExists()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
+        container.Add(typeAttributeMap);
 
-            // Act
-            var result = container.Add(typeAttributeMap);
+        // Act
+        TypeAttributeMap retrievedMap = container.GetAttributeMap(typeof(TestClass));
 
-            // Assert
-            Assert.False(result);
-        }
+        // Assert
+        Assert.NotNull(retrievedMap);
+        Assert.Equal(typeAttributeMap, retrievedMap);
+    }
 
-        [Fact]
-        public void GetAttributeMap_ByType_ShouldReturnTypeAttributeMap_WhenExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
-            container.Add(typeAttributeMap);
+    [Fact]
+    public void GetAttributeMap_ShouldThrowKeyNotFoundExceptionIfTypeDoesNotExist()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
 
-            // Act
-            var result = container.GetAttributeMap(typeof(TestClass));
+        // Act & Assert
+        Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap(typeof(TestClass)));
+    }
 
-            // Assert
-            Assert.Equal(typeAttributeMap, result);
-        }
+    [Fact]
+    public void GetAttributeMap_Generic_ShouldReturnTypeAttributeMapIfExists()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
+        container.Add(typeAttributeMap);
 
-        [Fact]
-        public void GetAttributeMap_ByType_ShouldThrowKeyNotFoundException_WhenNotExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
+        // Act
+        TypeAttributeMap<TestClass> retrievedMap = container.GetAttributeMap<TestClass>();
 
-            // Act & Assert
-            Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap(typeof(TestClass)));
-        }
+        // Assert
+        Assert.NotNull(retrievedMap);
+        Assert.Same(typeAttributeMap, retrievedMap);
+    }
 
-        [Fact]
-        public void GetAttributeMap_ByGenericType_ShouldReturnTypeAttributeMap_WhenExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TypeAttributeMap<TestClass>();
-            container.Add(typeAttributeMap);
+    [Fact]
+    public void GetAttributeMap_Generic_ShouldThrowKeyNotFoundExceptionIfTypeDoesNotExist()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
 
-            // Act
-            var result = container.GetAttributeMap<TestClass>();
+        // Act & Assert
+        Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap<TestClass>());
+    }
 
-            // Assert
-            Assert.Equal(typeAttributeMap, result);
-        }
+    [Fact]
+    public void TryGetAttributeMap_ShouldReturnTrueAndTypeAttributeMapIfExists()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
+        container.Add(typeAttributeMap);
 
-        [Fact]
-        public void GetAttributeMap_ByGenericType_ShouldThrowKeyNotFoundException_WhenNotExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
+        // Act
+        bool result = container.TryGetAttributeMap(typeof(TestClass), out TypeAttributeMap? retrievedMap);
 
-            // Act & Assert
-            Assert.Throws<KeyNotFoundException>(() => container.GetAttributeMap<TestClass>());
-        }
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(retrievedMap);
+        Assert.Equal(typeAttributeMap, retrievedMap);
+    }
 
-        [Fact]
-        public void TryGetAttributeMap_ByType_ShouldReturnTrueAndTypeAttributeMap_WhenExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TestTypeAttributeMap(typeof(TestClass));
-            container.Add(typeAttributeMap);
+    [Fact]
+    public void TryGetAttributeMap_ShouldReturnFalseIfTypeDoesNotExist()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
 
-            // Act
-            var result = container.TryGetAttributeMap(typeof(TestClass), out var retrievedMap);
+        // Act
+        bool result = container.TryGetAttributeMap(typeof(TestClass), out TypeAttributeMap? retrievedMap);
 
-            // Assert
-            Assert.True(result);
-            Assert.Equal(typeAttributeMap, retrievedMap);
-        }
+        // Assert
+        Assert.False(result);
+        Assert.Null(retrievedMap);
+    }
 
-        [Fact]
-        public void TryGetAttributeMap_ByType_ShouldReturnFalseAndNull_WhenNotExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
+    [Fact]
+    public void TryGetAttributeMap_Generic_ShouldReturnTrueAndTypeAttributeMapIfExists()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap = new();
+        container.Add(typeAttributeMap);
 
-            // Act
-            var result = container.TryGetAttributeMap(typeof(TestClass), out var retrievedMap);
+        // Act
+        bool result = container.TryGetAttributeMap<TestClass>(out TypeAttributeMap<TestClass>? retrievedMap);
 
-            // Assert
-            Assert.False(result);
-            Assert.Null(retrievedMap);
-        }
+        // Assert
+        Assert.True(result);
+        Assert.NotNull(retrievedMap);
+        Assert.Same(typeAttributeMap, retrievedMap);
+    }
 
-        [Fact]
-        public void TryGetAttributeMap_ByGenericType_ShouldReturnTrueAndTypeAttributeMap_WhenExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var typeAttributeMap = new TypeAttributeMap<TestClass>();
-            container.Add(typeAttributeMap);
+    [Fact]
+    public void TryGetAttributeMap_Generic_ShouldReturnFalseIfTypeDoesNotExist()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
 
-            // Act
-            var result = container.TryGetAttributeMap<TestClass>(out var retrievedMap);
+        // Act
+        bool result = container.TryGetAttributeMap<TestClass>(out TypeAttributeMap<TestClass>? retrievedMap);
 
-            // Assert
-            Assert.True(result);
-            Assert.Equal(typeAttributeMap, retrievedMap);
-        }
+        // Assert
+        Assert.False(result);
+        Assert.Null(retrievedMap);
+    }
 
-        [Fact]
-        public void TryGetAttributeMap_ByGenericType_ShouldReturnFalseAndNull_WhenNotExists()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
+    [Fact]
+    public void GetEnumerator_ShouldEnumerateAllTypeAttributeMaps()
+    {
+        // Arrange
+        TypeAttributeMapContainer container = new();
+        TestTypeAttributeMap<TestClass> typeAttributeMap1 = new();
+        TestTypeAttributeMap<string> typeAttributeMap2 = new();
+        container.Add(typeAttributeMap1);
+        container.Add(typeAttributeMap2);
 
-            // Act
-            var result = container.TryGetAttributeMap<TestClass>(out var retrievedMap);
+        // Act
+        List<TypeAttributeMap> enumeratedMaps = container.ToList();
 
-            // Assert
-            Assert.False(result);
-            Assert.Null(retrievedMap);
-        }
+        // Assert
+        Assert.Contains(typeAttributeMap1, enumeratedMaps);
+        Assert.Contains(typeAttributeMap2, enumeratedMaps);
+    }
 
-        [Fact]
-        public void GetEnumerator_ShouldEnumerateAllTypeAttributeMaps()
-        {
-            // Arrange
-            var container = new TypeAttributeMapContainer();
-            var map1 = new TestTypeAttributeMap(typeof(TestClass));
-            var map2 = new TestTypeAttributeMap(typeof(AnotherTestClass));
-            container.Add(map1);
-            container.Add(map2);
+    private class TestTypeAttributeMap<T> : TypeAttributeMap<T>;
 
-            // Act
-            var enumeratedMaps = new List<TypeAttributeMap>();
-            foreach (var map in container)
-            {
-                enumeratedMaps.Add(map);
-            }
-
-            // Assert
-            Assert.Contains(map1, enumeratedMaps);
-            Assert.Contains(map2, enumeratedMaps);
-        }
+    private class TestClass
+    {
     }
 }

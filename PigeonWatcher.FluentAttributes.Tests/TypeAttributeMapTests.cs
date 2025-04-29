@@ -1,19 +1,23 @@
+using PigeonWatcher.FluentAttributes;
+using PigeonWatcher.FluentAttributes.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using Xunit;
 
 namespace PigeonWatcher.FluentAttributes.Tests
 {
     public class TypeAttributeMapTests
     {
-        private class TestAttribute : Attribute { }
-
-        private class AnotherTestAttribute : Attribute { }
-
-        private class TestClass
+        private class TestMemberAttributeMap : MemberAttributeMap
         {
-            public string TestProperty { get; set; } = string.Empty;
+            public TestMemberAttributeMap(MemberInfo memberInfo) : base(memberInfo) { }
+        }
+
+        private class AnotherMemberAttributeMap : MemberAttributeMap
+        {
+            public AnotherMemberAttributeMap(MemberInfo memberInfo) : base(memberInfo) { }
         }
 
         private class TestTypeAttributeMap : TypeAttributeMap
@@ -22,194 +26,165 @@ namespace PigeonWatcher.FluentAttributes.Tests
         }
 
         [Fact]
-        public void Type_ShouldReturnCorrectType()
+        public void Add_ShouldAddMemberAttributeMap()
         {
             // Arrange
-            var type = typeof(TestClass);
-            var map = new TestTypeAttributeMap(type);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
 
             // Act
-            var result = map.Type;
-
-            // Assert
-            Assert.Equal(type, result);
-        }
-
-        [Fact]
-        public void AddPropertyAttributeMap_ShouldAddSuccessfully()
-        {
-            // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-
-            // Act
-            var result = map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var result = typeAttributeMap.Add(memberAttributeMap);
 
             // Assert
             Assert.True(result);
+            Assert.Contains(memberAttributeMap, typeAttributeMap.MemberAttributeMaps);
         }
 
         [Fact]
-        public void AddPropertyAttributeMap_ShouldReturnFalse_WhenPropertyAlreadyExists()
+        public void Add_ShouldReturnFalseIfMemberAlreadyExists()
         {
             // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-            map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var result = typeAttributeMap.Add(memberAttributeMap);
 
             // Assert
             Assert.False(result);
         }
 
         [Fact]
-        public void GetPropertyAttributeMap_ShouldReturnPropertyMap_WhenExists()
+        public void Get_ShouldReturnMemberAttributeMap()
         {
             // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-            map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.GetPropertyAttributeMap(nameof(TestClass.TestProperty));
+            var result = typeAttributeMap.Get("Length");
 
             // Assert
-            Assert.Equal(propertyMap, result);
+            Assert.Equal(memberAttributeMap, result);
         }
 
         [Fact]
-        public void GetPropertyAttributeMap_ShouldThrowKeyNotFoundException_WhenPropertyDoesNotExist()
+        public void Get_ShouldThrowKeyNotFoundExceptionIfMemberDoesNotExist()
         {
             // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
 
             // Act & Assert
-            Assert.Throws<KeyNotFoundException>(() => map.GetPropertyAttributeMap(nameof(TestClass.TestProperty)));
+            Assert.Throws<KeyNotFoundException>(() => typeAttributeMap.Get("NonExistentMember"));
         }
 
         [Fact]
-        public void TryGetPropertyAttributeMap_ShouldReturnTrueAndPropertyMap_WhenExists()
+        public void TryGet_ShouldReturnTrueAndOutMemberAttributeMapIfExists()
         {
             // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-            map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.TryGetPropertyAttributeMap(nameof(TestClass.TestProperty), out var retrievedPropertyMap);
+            var result = typeAttributeMap.TryGet("Length", out var retrievedMemberAttributeMap);
 
             // Assert
             Assert.True(result);
-            Assert.Equal(propertyMap, retrievedPropertyMap);
+            Assert.Equal(memberAttributeMap, retrievedMemberAttributeMap);
         }
 
         [Fact]
-        public void TryGetPropertyAttributeMap_ShouldReturnFalseAndNull_WhenPropertyDoesNotExist()
+        public void TryGet_ShouldReturnFalseIfMemberDoesNotExist()
         {
             // Arrange
-            var map = new TestTypeAttributeMap(typeof(TestClass));
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
 
             // Act
-            var result = map.TryGetPropertyAttributeMap(nameof(TestClass.TestProperty), out var retrievedPropertyMap);
+            var result = typeAttributeMap.TryGet("NonExistentMember", out var retrievedMemberAttributeMap);
 
             // Assert
             Assert.False(result);
-            Assert.Null(retrievedPropertyMap);
-        }
-    }
-
-    public class TypeAttributeMapGenericTests
-    {
-        private class TestAttribute : Attribute { }
-
-        private class TestClass
-        {
-            public string TestProperty { get; set; } = string.Empty;
+            Assert.Null(retrievedMemberAttributeMap);
         }
 
         [Fact]
-        public void GetPropertyAttributeMap_ShouldReturnPropertyMap_WhenExpressionIsValid()
+        public void GetGeneric_ShouldReturnTypedMemberAttributeMap()
         {
             // Arrange
-            var map = new TypeAttributeMap<TestClass>();
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-            map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.GetPropertyAttributeMap(x => x.TestProperty);
+            var result = typeAttributeMap.Get<TestMemberAttributeMap>("Length");
 
             // Assert
-            Assert.Equal(propertyMap, result);
+            Assert.Equal(memberAttributeMap, result);
         }
 
         [Fact]
-        public void GetPropertyAttributeMap_ShouldThrowInvalidOperationException_WhenExpressionIsNotProperty()
+        public void GetGeneric_ShouldThrowInvalidCastExceptionIfTypeMismatch()
         {
             // Arrange
-            var map = new TypeAttributeMap<TestClass>();
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => map.GetPropertyAttributeMap(x => x.ToString()));
+            Assert.Throws<InvalidCastException>(() => typeAttributeMap.Get<AnotherMemberAttributeMap>("Length"));
         }
 
         [Fact]
-        public void TryGetPropertyAttributeMap_ShouldReturnTrueAndPropertyMap_WhenExpressionIsValid()
+        public void TryGetGeneric_ShouldReturnTrueAndOutTypedMemberAttributeMapIfExists()
         {
             // Arrange
-            var map = new TypeAttributeMap<TestClass>();
-            var propertyMap = new PropertyAttributeMap
-            {
-                PropertyInfo = typeof(TestClass).GetProperty(nameof(TestClass.TestProperty))!
-            };
-            map.AddPropertyAttributeMap(nameof(TestClass.TestProperty), propertyMap);
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.TryGetPropertyAttributeMap(x => x.TestProperty, out var retrievedPropertyMap);
+            var result = typeAttributeMap.TryGet<TestMemberAttributeMap>("Length", out var retrievedMemberAttributeMap);
 
             // Assert
             Assert.True(result);
-            Assert.Equal(propertyMap, retrievedPropertyMap);
+            Assert.Equal(memberAttributeMap, retrievedMemberAttributeMap);
         }
 
         [Fact]
-        public void TryGetPropertyAttributeMap_ShouldReturnFalseAndNull_WhenPropertyDoesNotExist()
+        public void TryGetGeneric_ShouldReturnFalseIfTypeMismatch()
         {
             // Arrange
-            var map = new TypeAttributeMap<TestClass>();
+            var type = typeof(string);
+            var typeAttributeMap = new TestTypeAttributeMap(type);
+            var memberInfo = type.GetProperty("Length")!;
+            var memberAttributeMap = new TestMemberAttributeMap(memberInfo);
+            typeAttributeMap.Add(memberAttributeMap);
 
             // Act
-            var result = map.TryGetPropertyAttributeMap(x => x.TestProperty, out var retrievedPropertyMap);
+            var result = typeAttributeMap.TryGet<AnotherMemberAttributeMap>("Length", out var retrievedMemberAttributeMap);
 
             // Assert
             Assert.False(result);
-            Assert.Null(retrievedPropertyMap);
-        }
-
-        [Fact]
-        public void TryGetPropertyAttributeMap_ShouldThrowInvalidOperationException_WhenExpressionIsNotProperty()
-        {
-            // Arrange
-            var map = new TypeAttributeMap<TestClass>();
-
-            // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => map.TryGetPropertyAttributeMap(x => x.ToString(), out _));
+            Assert.Null(retrievedMemberAttributeMap);
         }
     }
 }
