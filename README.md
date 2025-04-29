@@ -56,15 +56,15 @@ TypeAttributeMapContainerBuilder container = new()
 TypeAttributeMap<Example> exampleMap = container.GetAttributeMap<Example>();
 
 // Retrieve the DataContractAttribute on the type
-DataContractAttribute typeAttr = exampleMap.GetAttribute<DataContractAttribute>();
+DataContractAttribute typeAttribute = exampleMap.GetAttribute<DataContractAttribute>();
 
 // Retrieve the DataMemberAttribute on the property
-DataMemberAttribute propAttr = exampleMap
+DataMemberAttribute propAttribute = exampleMap
     .Get(x => x.ExampleProperty)
     .GetAttribute<DataMemberAttribute>();
 
 // Retrieve the DataMemberAttribute on the field
-DataMemberAttribute fieldAttr = exampleMap
+DataMemberAttribute fieldAttribute = exampleMap
     .Get(x => x.ExampleField)
     .GetAttribute<DataMemberAttribute>();
 ```
